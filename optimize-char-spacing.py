@@ -1,39 +1,74 @@
-#!/bin/env python
+#!/usr/bin/env python
 # vim: set fileencoding=utf-8
 
 import re
 import os
 import sys
 import codecs
-import tempfile
+import string
+import operator
+import functools
+import itertools
+from xml.dom import minidom
 
-def isascii(char):
-    if not char:
-        return True
+def add_space(text):
+    def isalnum(c):
+        return c in (string.digits + string.letters)
 
-    return ord(char) < 255
+    def ismulti(c):
+        return ord(c) > 128
+
+    def helper(res, char):
+        prev = res[-1]
+
+        if (prev
+                and not prev.isspace()
+                and not char.isspace()
+                and ((isalnum(prev) and ismulti(char))
+                    or (ismulti(prev) and isalnum(char)))):
+            return res + ' ' + char
+        else:
+            return res + char
+
+    return functools.reduce(helper, text)
+
+def all_text_nodes(root):
+    if root.nodeType == root.TEXT_NODE:
+        return [root]
+    elif not root.childNodes:
+        return []
+    else:
+        return functools.reduce(
+                operator.add, map(all_text_nodes, root.childNodes))
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
-        print "Usage: convert.py in-file out-file"
+        print "Usage: convert.py in.xml out.xml"
         sys.exit(1)
 
     infile, outfile = sys.argv[1], sys.argv[2]
 
-    out = codecs.open(outfile, "w", "utf-8")
+    doc = minidom.parse(infile)
 
-    prev_char = None
-    for char in codecs.open(infile, "r", "utf-8").read():
-        if isascii(char):
-            if not char.isalpha() or isascii(prev_char) or char.isspace():
-                out.write(char)
-            else:
-                out.write(' ' + char)
-        else:
-            if isascii(prev_char) and prev_char.isalpha() and not prev_char.isspace():
-                out.write(' ' + char)
-            else:
-                out.write(char)
-        prev_char = char
+    for node in all_text_nodes(doc):
+        node.data = add_space(node.data)
 
-    out.close()
+    literals = functools.reduce(
+                operator.add,
+                [doc.getElementsByTagName(x)
+                    for x in [
+                        'literal', 'command', 'link', 'filename',
+                        'userinput', 'computeroutput']])
+
+    for item in literals:
+        prev = item.previousSibling
+        if prev and prev.nodeType == prev.TEXT_NODE:
+            if not prev.data[-1].isspace():
+                prev.data += ' '
+
+        nxt = item.nextSibling
+        if nxt and nxt.nodeType == nxt.TEXT_NODE:
+            if not nxt.data[0].isspace():
+                nxt.data = ' ' + nxt.data
+
+    codecs.open(outfile, 'w', 'utf-8').write(doc.toxml())
