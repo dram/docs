@@ -186,7 +186,7 @@ Firefox Cache
 <listitem><para><link xlink:href="https://github.com/dram/configs/blob/master/.config/tint2/tint2rc"/></para></listitem>
 </varlistentry>
 <varlistentry><term>fontconfig配置</term>
-<listitem><para><link xlink:href="https://github.com/dram/dram-configs/blob/master/.fonts.conf"/></para></listitem>
+<listitem><para><link xlink:href="https://github.com/dram/configs/blob/master/.fonts.conf"/></para></listitem>
 </varlistentry>
 </variablelist>
 <sect1><title>窗口管理器</title>
@@ -870,7 +870,7 @@ fi</screen>
 
 <para>Linux中有很多的SHELL实现，其中主要包括sh及csh两个分支。在Linux中比较普及的是bash。这里选择使用mksh，相对于bash来说，它更为轻量级，也更接近于POSIX标准。如果喜欢功能强大的SHELL，也可以考虑zsh。</para>
 <para>通过<literal>chsh</literal>命令可以更换shell。</para>
-<para>关于它的配置，可以参考这里：<link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://github.com/dram/dram-configs/blob/master/.mkshrc">https://github.com/dram/dram-configs/blob/master/.mkshrc</link>。</para>
+<para>关于它的配置，可以参考这里：<link xlink:href="https://github.com/dram/configs/blob/master/.mkshrc"/>。</para>
 <para>这里在设置<literal>PATH</literal>时，将<literal>$HOME/bin/</literal>目录置于系统的命令路径之前，这样可以方便地对系统原有程序进行覆盖。通过<literal>which</literal>命令可以确认当前调用的是哪一个命令。</para>
 </sect1>
 <sect1><title>常用命令</title>
