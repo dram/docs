@@ -416,6 +416,7 @@ export QT_IM_MODULE=uim</screen>
 <screen>uim-module-manager --register zhengma --path $HOME/.uim.d/plugin/</screen>
 <para>另处还需要安装郑码的码表文件，这里对uim原先的郑码码表进行了一些调整，相关脚本在这里可以找到：<link xlink:href="https://github.com/dram/configs/tree/master/tools/uim-table/"/>。</para>
 </sect1>
+
 <sect1><title>功能完善</title>
 
 <para>接下来简要说明这个郑码模块对原有uim中文输入的优化。</para>
@@ -426,7 +427,7 @@ export QT_IM_MODULE=uim</screen>
 <para>由于对于郑码这类形码输入法来说，重码出现的几率不高，并且在单字输入时，即使有重码，大多也只是两重的，所以需要一个便捷的方法来选取第二候选词。uim默认不具有这一功能，这里与极点保持一致，使用<literal>;</literal>作为第二候选词的按键。</para>
 </sect2>
 <sect2><title>英文上屏</title>
-<para>在编辑一些文档时，可能需要同时输入中英文，这样就需要输入法支持的开启状态下输入少量中文。这里与FCITX一致，使用回车键对英文进行直接上屏。</para>
+<para>在编辑一些文档，比如技术文档时，往往需要同时输入中英文，这就需要输入法能够支持在开启中文输入时也可以输入少量的英文。这里与FCITX输入法的处理方式保持一致，使用回车键对英文直接上屏。同时为方便从中文输入切换到英文，使用<literal>Shift+Enter</literal>将现有英文上屏再关闭输入法的中文输入。</para>
 </sect2>
 <sect2><title>状态提示</title>
 <para>在中英文混合输入时，由于经常在中英文输入之间进行切换，所以输入法应该能够直接地提示当前处于什么状态。这里使用候选框作为状态的提示，中文状态下候选框始终显示，而英文状态下不显示。</para>
@@ -438,6 +439,7 @@ export QT_IM_MODULE=uim</screen>
 <para>与单字输入的处理相似，这里通过在码表中删除所有繁体中文的方式实现只输入简体中文的功能，这样可以减少重码数。</para>
 </sect2>
 </sect1>
+
 <sect1 xml:id="vim-input-method"><title>Vim协同工作</title>
 
 <para>对于让输入法与Vim模式切换协同工作的实现方式，主要可以分为在编辑器实现和在输入法中实现。以下对这两者分别予以说明。</para>
