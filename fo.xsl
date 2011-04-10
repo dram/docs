@@ -44,6 +44,7 @@
 
 <!-- 显示section数字编号 -->
 <xsl:param name="section.autolabel">1</xsl:param>
+<xsl:param name="section.label.includes.component.label">1</xsl:param>
 <xsl:param name="section.autolabel.max.depth" select="2"/>
 
 <!-- 首行缩进两个字符 -->
