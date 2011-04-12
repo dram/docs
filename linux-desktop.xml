@@ -119,7 +119,7 @@
 </sect2>
 <sect2><title>时间设置</title>
 
-<para>对于时间的调整主要包括时区和时间的设置。时区的配置文件是<literal>/etc/localtime</literal>，从<literal>/usr/share/zoneinfo/</literal>中拷贝相应时区的文件到<literal>/etc/localtime</literal>即可完成对时区的修改。</para>
+<para>对于时间的调整主要包括时区和时间的设置。时区的配置文件是<literal>/etc/localtime</literal>，从<literal>/usr/share/zoneinfo/</literal>中拷贝相应时区的文件到<literal>/etc/localtime</literal>即可完成对时区的修改。比如中国一般选择<filename>Asia/Shanghai</filename><footnote><para>需要注意的是，在将时区设置为Asia/Shanghai之后，date命令在输出时区时会显示<literal>CST</literal>，而CST有两种含义，分别是Central Standard Time和China Standard Time。通过<command>date +%z</command>则可以看到数值表示的时区。具体关于时区的缩写可以到这里查看：<link xlink:href="http://en.wikipedia.org/wiki/List_of_time_zone_abbreviations"/>。</para></footnote>。</para>
 <para>设置系统时间可以通过<literal>date</literal>命令完成，格式为：<literal>date MMDDhhmmCCYY</literal>。M为月，D为日，h为时，m为分，CCYY为年。当然也可以使用ntp进行同步。</para>
 <para>通过<literal>date</literal>命令设置的其实是系统的时间，并没有同步到物理时钟，通过<literal>/sbin/hwclock --systohc</literal>进行同步，但各发行版一般都会在系统关机脚本中加入物理时钟自动同步功能。</para>
 </sect2>
@@ -632,6 +632,8 @@ nmap &lt;silent&gt; &lt;leader&gt;m         :MRU&lt;CR&gt;</screen>
 
 <para>Vim注重NORMAL模式下的便捷处理，在INSERT模式下一般主要还是进行简单的文本输入操作。但Vim也支持在INSERT模式下的一些快捷操作。</para>
 <para>比如<literal>CTRL-W</literal>可以删除一个单词，而<literal>CTRL-U</literal>可以删除一整行。另外<literal>CTRL-N</literal>和<literal>CTRL-P</literal>这两个快捷键可以进行简单的文本补全。</para>
+<para><literal>Ctrl-R</literal>可以用来插入register的内容，可以使用这一功能完成在INSERT模式下的粘贴功能。其中<literal>"</literal>是unnamed register，<literal>+</literal>是clipboard，<literal>*</literal>是selection。详细信息可以查看<command>:h i_CTRL-R</command>。</para>
+<para>在INSERT模式下，<literal>Ctrl-O</literal>可以临时进入NORMAL模式执行一个命令。详细信息可以查看<command>:h i_CTRL-O</command>。</para>
 <para>通过<literal>:h ins-special-keys</literal>可以查看INSERT模式下所有快捷方式的详细说明。</para>
 </sect2>
 </sect1>
