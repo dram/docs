@@ -511,6 +511,9 @@ autocmd! InsertEnter *  set noimdisable</screen>
   <varlistentry><term>Gmail Watcher</term>
     <listitem><para>Gmail邮件提醒。于Gmail邮件提醒相关的Firefox插件有很多，但总体来说Gmail Watcher最为完善。</para></listitem>
   </varlistentry>
+  <varlistentry><term>Stylish</term>
+    <listitem><para>可以对Firefox进行一些定制，从<link xlink:href="http://userstyles.org"/>可以下载很多。比如<link xlink:href="http://userstyles.org/styles/2433"/>定制了<code>about:blank</code>页面。</para></listitem>
+  </varlistentry>
 </variablelist>
 </sect2>
 <sect2><title>其它</title>
