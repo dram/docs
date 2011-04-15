@@ -1,0 +1,817 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<book version="5.0"
+  xmlns="http://docbook.org/ns/docbook"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+<info><title>Linux程序设计</title>
+  <author>
+    <personname>王欣</personname>
+    <email>dram.wang@gmail.com</email>
+  </author>
+</info>
+
+<dedication><title/>
+  <blockquote><attribution>Rabindranath Tagore</attribution>
+    <para>Either you have work or you have not.</para>
+    <para>When you have to say, "Let us do something," then begins mischief.</para>
+  </blockquote>
+  <blockquote><attribution>Rabindranath Tagore</attribution>
+    <para>Let my doing nothing when I have nothing to do become untroubled in its depth of peace like the evening in the seashore when the water is silent.</para>
+  </blockquote>
+</dedication>
+
+<preface><title>前言</title>
+<para>虽然对于桌面应用来说，Linux还不是很流行，但至少在网络应用中，Linux已经占有了比较大的市场份额。而相于Windows来说，Linux也是一个比较理想的程序平台。</para>
+
+<!-- TODO：需要进一步说明为什么说Linux是一个理想的程序平台。 -->
+</preface>
+
+<chapter><title>系统编程</title>
+<sect1><title>链表结构</title>
+
+<para>由于C语言标准中并没有包含对链表结构的定义，而链表往往又是经常会用到的，所以程序需要自行定义。不过可以参考其它的一些设计，比如NetBSD的queue.h。或是直接使用glib库中的实现。</para>
+
+<para><literal>queue.h</literal>的代码可以查看这里：<link xlink:href="http://cvsweb.netbsd.org/bsdweb.cgi/src/sys/sys/queue.h"/>。这里是关于它的说明文档：<link xlink:href="http://netbsd.gw.com/cgi-bin/man-cgi?queue++NetBSD-current"/>。</para>
+
+<para>以下总结一下单向链表的一些实现方式。</para>
+
+<para>最为直接的方法是在需要组织为链表的结构体中添加指向本身的指针，比如在<code>struct user</code>中添加<code>struct user *next</code>成员。这一方法破坏了数据的抽象，因为对于<code>struct user</code>来说，<code>*next</code>与它所表示的数据无关，而另一方面链表的整体结构也将依赖与它的数据。</para>
+
+<para>另一方式是通过定义<code>struct user_list_node</code>，其中包含两个成员，一个是指向<code>struct user</code>的指针，另一个是指向<code>struct user_list_node</code>的指针。再定义一个<code>struct user_list</code>指向链表头。这一方式的不足是对于使用<code>struct user_list</code>的代码，需要同时处理<code>struct user_list</code>及<code>struct user_list_node</code>两个结构，使得接口不大明朗。</para>
+
+<para>最后，可以借鉴Lisp中list的思想，将第二种方法中的<code>struct user_list</code>及<code>struct user_list_node</code>合并，这样，任何一个链表结点的指针都是一个完整的链表结构，是原链表的一个子链表。这个方式的不足是在不另外包裹一层结构体的情况下，无法方便地实现向链表尾部追加数据。</para>
+</sect1>
+
+<sect1><title>查找errno信息</title>
+<para>在调试程序、排查故障时，经常需要和errno打交道，比如一个函数返回错误，一般都会调用<code>strerror()</code>等类似接口打印错误信息。但这些错误信息不便于在书籍的索引或是搜索引擎中查找，首先需要找到该errno值对应的宏名，才能较快等查找到相关资料。</para>
+
+<para>可以通过下面的Python脚本生成一份errno、宏名及信息的对应列表，方便查找。</para>
+
+<programlisting>#!/bin/env python
+
+import os
+import errno
+
+if __name__ == '__main__':
+    for key in sorted(errno.errorcode.keys()):
+        print '%4s%16s  %s' % (key, errno.errorcode[key], os.strerror(key))
+</programlisting>
+</sect1>
+
+<sect1><title>临时文件创建</title>
+<para>临时文件是在程序中经常会被使用到的一种机制。在不同情境下，可能对临时文件接口有不同的需求。比如有时只是将临时文件作为临时的数据存储空间，不需要与其它进程共享，这时可以直接使用<code>tmpfile()</code>函数。<code>tmpfile()</code>返回的是一个<code>FILE *</code>句柄，由<code>tmpfile()</code>创建的临时文件没有实际的文件名，这样处理的好处是，当程序结束时，文件将自动被删除，不需要程序手动处理。</para>
+
+<para>如果需要与其它进程共享临时文件，或是需要以临时文件的文件名作为参数调用其它程序以传递数据，这时就需要用到<code>mkstemp()</code>。<code>mkstemp()</code>通过传入的模板字符串生成一个不存在的文件名，同时创建该文件，将文件句柄做为函数返回值返回，而文件名可以从被修改了的模板字符串中得到。</para>
+
+<para><code>tmpfile()</code>和<code>mkstemp()</code>是比较新的临时文件创建接口，还有几个现在已经不提倡使用的接口，通过了解它们可以理解临时文件这一机制的一些细节。</para>
+
+<para><code>mktemp()</code>函数用于生成一个不存在的文件名。不提倡使用<code>mktemp()</code>的主要原因是它只是生成一个当前不存在的文件名，而没有直接创建该文件。而如果要创建这个文件则需要接着调用<code>creat()</code>，但这个文件可能会在<code>mktemp()</code>和<code>creat()</code>之间被其它进程创建，从而导致文件创建失败。</para>
+
+<para><code>tmpnam()</code>函数有与<code>mktemp()</code>一样的问题，同时，当传入参数为<code>NULL</code>时，由于需要用到<code>static</code>变量，所以不是线程安全的。</para>
+
+<para>另外有一个<code>tempnam()</code>接口，与<code>tmpnam()</code>有同样的问题。</para>
+</sect1>
+</chapter>
+
+<chapter><title>脚本</title>
+<sect1><title>SHELL</title>
+<sect2><title>标准</title>
+<para>在Linux中，大多数发行版都采用bash作为系统默认的SHELL，但在BSD中往往是使用其它SHELL，如ksh等。为保证脚本的通用性，这里主要介绍SUS标准<footnote><para>SUS是Single UNIX Specification的缩写，所有内容可以在<link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/"/>查看。关于bash与POSIX的不同，可以查看这里：<link xlink:href="http://www.gnu.org/software/bash/manual/html_node/Bash-POSIX-Mode.html"/>。</para></footnote>所定义的SHELL功能。SUS中与SHELL相关的主要是以下几份文档：</para>
+
+<variablelist>
+<varlistentry><term>sh - shell</term><listitem><para><link xlink:href="http://pubs.opengroup.org/onlinepubs/9699919799/utilities/sh.html"/></para></listitem></varlistentry>
+<varlistentry><term>Shell Command Language</term><listitem><para><link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html)"/></para></listitem></varlistentry>
+<varlistentry><term>Regular Expressions</term><listitem><para><link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html"/></para></listitem></varlistentry>
+</variablelist>
+
+</sect2>
+<sect2><title>语法</title>
+<para>相对于一般的编程语言来说，shell的语法有些特殊。这与它的出发点有关。因为shell首先是提供给用户一个命令输入和执行的交互环境，所以shell命令需要以解析命令的形式对脚本内容进行解析，这从它的名称中也可以看出，shell语言的全称为Shell Command Language，其中就有“命令”一词。而对于流程控制块比如if, whlie等的设计，也是基于这一点。只要理解了shell语言的设计原理，对shell的语法就好理解了。</para>
+</sect2>
+<sect2><title>数据抽象</title>
+<para>Shell中的唯一数据类型是字符串，由于各个命令都是以文本作为输入和输出的，这样的设计更利于整合这些程序。同时命令的参数也是字符串的形式。</para>
+
+<para>由于shell的这一特点，使得不能方便地进行复杂的数据抽象，但也是可以通过变通的方式实现的，以下就是一个通过eval实现的hash结构(代码来自ash中的mknodes.sh)：</para>
+<programlisting>field=field_name
+struct=struct_instance
+eval Struct_${struct}_${field}=value
+eval echo \$Struct_${struct}_${field}</programlisting>
+</sect2>
+<sect2><title>函数抽象</title>
+<sect3><title>参数</title>
+<para>Shell中函数参数与脚本参数统一使用positional parameters处理。通过<literal>$1, $2, ...</literal>可以引用这些参数，如果参数个数大于9，则需要先使用shift命令去除前面的参数，后面的参数会被前移。Positional parameters也可以通过<command>set</command>命令进行设置。<literal>$#</literal>表示positional parameters个数，<literal>$@ $*</literal>将被替换为所有positional parameters，<literal>"$@"</literal>和<literal>"$*"</literal>在是否会进行field split的处理上有所不同。</para>
+</sect3>
+<sect3><title>局部变量</title>
+<para>标准shell中没有提供局部变量的功能。其实可以将一个shell脚本理解为一个函数单元，这样脚本里的全局变量也就可以作为局部变量使用了。而对于shell来说，调用函数其实相当于调用外部命令，不管是从形式还是从参数处理上都是一样的。</para>
+</sect3>
+</sect2>
+<sect2><title>输入输出</title>
+<!--
+<para>field splitting只对tilde expansion，parameter expansion，command substitution及arithmetic expansion进行处理，以WORD为单位。</para>
+-->
+
+<para>键盘输入可以使用<command>read</command>命令，详细的说明可以查看：<link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/read.html"/>。</para>
+
+<para>输出可以使用<command>echo</command>或者<command>printf</command>，详细标准看这里：<link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/printf.html"/>，<link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/echo.html"/>。由于<command>echo</command>的<literal>-n</literal>参数以及在转义符的处理上没有标准化，所以建议使用<command>printf</command>。</para>
+
+<para>另外，Here Document可以将字符串作为文件重定向。</para>
+</sect2>
+<sect2><title>字符串处理</title>
+<para>字符串处理不是Shell的强项，但通过Parameter Expansion可以实现一些简单的字符处理。</para>
+
+<programlisting>[ "${_str%suffix}" != "${_str}" ]     # endswith
+[ "${_str#prefix}" != "${_str}" ]     # startswith
+[ "$_str#*sub}" != "${_str}" ]        # include</programlisting>
+</sect2>
+<sect2><title>常用命令</title>
+<sect3><title>grep</title>
+<para>关于grep的标准，可以查看：<link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/grep.html"/>。以下列举几个参数：</para>
+
+<itemizedlist>
+<listitem><para><literal>-e</literal> -- 指定多个匹配模式，各模式使用<literal>|</literal>连接</para></listitem>
+<listitem><para><literal>-i</literal> -- 忽略大小写</para></listitem>
+<listitem><para><literal>-n</literal> -- 显示行号</para></listitem>
+</itemizedlist>
+</sect3>
+
+<sect3><title>sed</title>
+<para>关于sed的标准，可以查看：<link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/sed.html"/>。</para>
+</sect3>
+
+<sect3><title>awk</title>
+<para>关于awk的标准，可以查看：<link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/awk.html"/>。</para>
+
+<para>有几种方式可以向awk传递参数：</para>
+
+<orderedlist>
+<listitem><para>通过环境变量，在awk中可以使用ENVIRON数组读取环境变量值；</para></listitem>
+<listitem><para>通过<literal>-v</literal>参数，传入赋值语句；</para></listitem>
+<listitem><para>通过在awk的BEGIN中读取<literal>ARGV</literal>中的值，再将其删除，这样就不会影响awk自身的处理。</para></listitem>
+</orderedlist>
+</sect3>
+
+<sect3><title>find</title>
+<para>关于find的标准，可以查看：<link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/find.html"/>。</para>
+
+<para>在<literal>-exec</literal>参数中，当以<literal>;</literal>结尾时，每个path执行一次。当以<literal>+</literal>结尾时，所有path被连接起来，再一次执行命令。</para>
+</sect3>
+
+<sect3><title>date</title>
+<para>关于date的标准，可以查看：<link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/date.html"/>。</para>
+<para>下面的命令可以将普通格式的时间转为UNIX时间戳：</para>
+<screen>date +%s -d"2010-12-20 00:00"</screen>
+<para>date命令中可以进行简单的运算，比如以下就是将unix timstamp转化为date：</para>
+<screen>date -ud "1970-01-01 + 1234567890 seconds"</screen>
+</sect3>
+
+<sect3><title>其它</title>
+<itemizedlist>
+<listitem><para><literal>tr</literal>: <link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/tr.html"/></para></listitem>
+<listitem><para><literal>cp</literal>: <link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/cp.html"/></para></listitem>
+<listitem><para><literal>ed</literal>: <link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/ed.html"/></para></listitem>
+<listitem><para><literal>expr</literal>: <link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/expr.html"/></para></listitem>
+<listitem><para><literal>fc</literal>: <link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/fc.html"/></para></listitem>
+<listitem><para><literal>pax</literal>: <link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/pax.html"/></para></listitem>
+<listitem><para><literal>ps</literal>: <link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/ps.html"/></para></listitem>
+<listitem><para><literal>sort</literal>: <link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/sort.html"/></para></listitem>
+<listitem><para><literal>test</literal>: <link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/test.html"/></para></listitem>
+<listitem><para><literal>ulimit</literal>: <link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/ulimit.html"/></para></listitem>
+<listitem><para><literal>unalias</literal>: <link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/unalias.html"/></para></listitem>
+<listitem><para><literal>wait</literal>: <link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/wait.html"/></para></listitem>
+<listitem><para><literal>xargs</literal>: <link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/xargs.html"/></para></listitem>
+</itemizedlist>
+</sect3>
+
+</sect2>
+</sect1>
+
+<sect1><title>Python</title>
+<sect2><title>异常与判断</title>
+
+<para>在Python中，相对于判断，很多时候更倾向于使用异常，比如下面的代码：</para>
+
+<programlisting>try:
+    x = 3 / y
+except ZeroDivisionError:
+    x = 0
+
+if y != 0:
+    x = 3 / y
+else:
+    x = 0</programlisting>
+
+<para>如果除以0的操作出现得不频繁的话，速度上异常会快一点，因为它少了一步判断操作。</para>
+
+<para>下面的代码中，在if判断和open函数打开文件之间，可能文件被删除，从这一点上说，异常更加保险：</para>
+
+<programlisting>if os.path.exists(filename):
+    f = open(filenmae)</programlisting>
+
+</sect2>
+
+<sect2><title>模块依赖处理</title>
+<para>与发行版在库依赖上面临的问题一样，处理Python模块之间的依赖也会遇到相似的困难。<link xlink:href="http://www.virtualenv.org/">virtualenv</link>的出现就是为了解决这一问题，结合使用pip工具，可以很方便地生成一个较为独立的Python运行环境。</para>
+
+<para>只需要执行<code>python path/to/virualenv.py env-name</code>就可以生成一个<filename>env-name</filename>目录，其中包含独立的Python环境，再就可以使用<filename>env-name/bin/pip</filename>安装需要的Python模块或程序，不再受系统已安装模块的影响。</para>
+</sect2>
+
+<sect2><title>单元测试</title>
+<para>Python的unittest模块基于JUnit设计。</para>
+
+<para>setUp()函数会在每个test case执行时被调用。所有test case被执行的顺序是不确定的。</para>
+</sect2>
+
+<sect2><title>修改文件</title>
+
+<para>文本处理是脚本语言的一个重要应用，而修改文件某行或几行文本内容也是经常遇到的问题。由于类UNIX系统中的文件系统一般都不是结构化文件系统，在修改文件时并不是很方便，以下整理了一些比较常用的模式。这里以主流的Python，Ruby和PHP三大脚本语言为例。</para>
+
+<para>以下的比较主要是从代码的可读性及实现的便捷性上考虑的，并没有考虑性能因素，所以只适用于对小文件的修改。</para>
+
+<para>最为直接的一种方式是先建一个临时文件，对原文件以行遍历，如果无需修改，直接写入临时文件，需要修改的行，将修改后的内容写入临时文件，最后关闭临时文件，覆盖原文件。各类脚本语言多有方便的临时文件创建接口。这一方法的一个不足是，无法保留文件的原有权限，在处理系统配置文件时需要特别注意。</para>
+
+<para>Python中有一<code>fileinput</code>模块，如果以<code>fileinput.input('foo.txt', inplace=True)</code>形式打开文件，标准输出会被重定向到打开的文件，原文件内容被移至一个临时文件，随后只需将需要写入新文件的内容打印到标准输出就可以了。在调用<code>fileinput.input()</code>之后需要再调用<code>fileinput.close()</code>。这个相对于上面的方式，主要是省去了手动创建临时文件的操作，同时保留了原有文件权限等属性。但fileinput在处理文件时，先将原文件移为临时文件，这样在处理过程中就有可能出现文件内容不完整的状态。</para>
+
+<para>也可以利用PHP中的<code>file()</code>及<code>file_put_contents()</code>函数方便的实现对文件的修改。<code>file()</code>函数读取文件全部内容并以数组形式返回。在得到数组之后，可以对其以哈希数组方式foreach，以行号为键，行内容为值，如需要修改，替换数组中的该项。最后，通过<code>file_put_contents()</code>函数将数组内容写回文件。而在Ruby中与之对应的是<code>IO#puts</code>，Python则是<code>write(''.join(str_list))</code>。</para>
+
+</sect2>
+
+</sect1>
+</chapter>
+
+<chapter><title>开发工具</title>
+
+<para>在Windows中，一般会使用集成开发环境进行程序开发，而Linux中更多的是使用多种工具的组合来完成。以下选取其中的一些工具进行介绍。</para>
+
+<sect1><title>Makefile</title>
+
+<para>在POSIX标准中，有对<command>make</command>进行说明，可以从这里查看：<link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/make.html"/></para>
+
+<para>现在比较流行的有BSD make和GNU make，它们之间有着不小的差别，使用时需要注意。以下如果没有特别说明，则描述的都是POSIX标准中已经有说明的功能。</para>
+
+<sect2><title>宏定义及替换</title>
+<para>在make中，以“宏”的形式来实现变量的功能。宏定义的语法如下所示：</para>
+
+<programlisting>macro=value</programlisting>
+
+<para>宏替换格式为<code>$(macro)</code>或<code>${macro}</code>，如果宏名称为单个字符，则不需要用<code>{}</code>或<code>()</code>来包围。</para>
+
+<para>宏定义可以在Makefile文本或是在make命令行中指定，另外SHELL环境变量也会被转化为宏。所以<code>foo=bar make</code>和<code>make foo=bar</code>功能上相似，但两者的优先级是不同的，比如下面这段代码在执行<code>DESTDIR=foo make</code>和<code>make DESTDIR=foo</code>时输出的结果是不同的：</para>
+
+<programlisting>DESTDIR = bar
+
+all:
+	@echo $(DESTDIR)
+</programlisting>
+
+<para>可以通过<literal>-p</literal>命令查看make最终使用了哪一个值。<literal>-e</literal>参数可以让环境变量有更高的优先级。</para>
+
+<para>另外，只有被<literal>export</literal>的环境变量才会自动转化为宏。比如在mksh中，PWD没有被export，这样在mksh中调用make就不能找到PWD了。具体哪些环境变量被转化为宏也可以通过<command>make -p</command>查看。</para>
+
+<para>在POSIX中，宏定义等号右边如果包含宏，不会在定义时就被替换。而GNU Make中引入了<literal>:=</literal>，使用这一方式定义宏时值部分将立即被替换。在<link xlink:href="http://www.gnu.org/software/make/manual/make.html#Flavors"/>有详细介绍。</para>
+</sect2>
+
+<sect2><title>make执行</title>
+<para>Makefile中的每一行命令相互独立运行，所以其中一行命令对环境变量的更改不会影响随后的命令。比如每一行命令的初始PWD都为运行make命令时的目录。</para>
+</sect2>
+
+</sect1>
+
+<!--
+<sect1><title>调试</title>
+<para>关于调试的基本原理，可看参考下面的系列文章。http://eli.thegreenplace.net/2011/01/23/how-debuggers-work-part-1/</para>
+<sect2><title>查看地址的变量名</title>
+<screen>info symbol 0xFFFFFFFF</screen>
+<para>同样，可以通过 info address name来查看变量的地址。</para>
+</sect2>
+</sect1>
+-->
+
+<sect1><title>diff &amp; patch</title>
+
+<para>对于简单的补丁制作，可以使用diff生成，而比较复杂的处理，最好使用git之类的版本管理工具生成。</para>
+
+<para>比如diff的<code>-x</code>参数，只是对一个路径的basename进行比较，如果同时存在<filename>a/b/c</filename>和<filename>a/c</filename>而只想忽略<filename>a/b/c</filename>，diff则显示有些无能为力。</para>
+
+<para>借助于版本管理工具，可以先提交原始版本，再做修改，最后调用<command>git diff</command>即可。</para>
+
+<para>这里是POSIX标准关于diff的说明：<link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/diff.html"/>。</para>
+
+</sect1>
+
+<!--
+<sect1><title>工具链</title>
+<sect2><title>ld</title>
+<para></para>
+</sect2>
+<sect2><title>nm</title>
+<para>查看可执行文件中包含的symbol。</para>
+</sect2>
+</sect1>
+-->
+
+<sect1><title>其它工具</title>
+
+<variablelist>
+<varlistentry><term><command>objdump</command></term><listitem>
+<para>显示二进制文件的汇编码。对于ELF可执行程序，只有在包含section header时，objdump才能正确分辨程序的正文段内容，如果程序不包含section header，也可以使用命令<command>objdump -D -b binary -m i386 file --start-address=ADDRESS</command>手动指定正文的起始地址。</para></listitem></varlistentry>
+<varlistentry><term><command>strace</command></term><listitem>
+<para>strace可以用来查看一个命令(通过在命令行中指定)或进程(通过<literal>-p</literal>参数指定)进行了哪些系统调用。这有时可以用来判断程序的问题。<literal>-s</literal>参数用于指定显示字符串的最大长度，<literal>-e trace=</literal>可以指定只显示哪些系统调用。</para></listitem></varlistentry>
+<varlistentry><term><command>lsof</command></term><listitem>
+<para>lsof命令用于显示系统当前打开的文件。</para></listitem></varlistentry>
+<varlistentry><term><command>od</command></term><listitem>
+<para>od可以将文件以十六进制等形式显示出来。POSIX标准中对于这个命令有说明：<link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/od.html"/></para></listitem></varlistentry>
+<varlistentry><term><command>ldd</command></term><listitem>
+<para>ldd可以显示程序链接的动态库信息。</para></listitem></varlistentry>
+<varlistentry><term><command>strings</command></term><listitem>
+<para>显示文件中的所有字符串。</para></listitem></varlistentry>
+</variablelist>
+
+</sect1>
+
+</chapter>
+
+<chapter><title>代码管理</title>
+
+<para>版本管理工具从最开始的CVS，到Subversion，再到分布式的git, Mercurial，功能性和实用性上已经能够满足大部分代码管理的需求。</para>
+
+<sect1><title>程序版本标识</title>
+<para>在BSD系统中，有<command>ident</command>命令可以用来显示编译该程序时各源程序文件的版本。其实显示的是在各文件中定义是<code>static char rcsid[]</code>字符串。该字符串的内容会在提交到CVS时被自动替换为当前的版本号以及最后修改文件的提交者等信息。具体可以查看<link xlink:href="http://math.arizona.edu/~swig/documentation/rcs/"/>中的Magic Keywords一节。</para>
+
+<para>与之类似的还有<command>what</command>命令及与它对应的<code>__COPYRIGHT</code>字符串。</para>
+
+<para>可惜现在大部分开源软件并没有继承这一风格。</para>
+</sect1>
+
+<sect1><title>Subversion</title>
+
+<sect2><title>忽略文件</title>
+
+<para>在SVN中，忽略文件或目录通过设置父目录的<literal>svn:ignore</literal>属性处理。通过<command>svn proplist</command>和<command>svn propget</command>可以显示当前的设置，而<command>svn propset</command>和<command>svn propget</command>可以进行设置。</para>
+
+<para>在<link xlink:href="http://stackoverflow.com/questions/116074/how-to-ignore-a-directory-with-svn"/>有更为详细的介绍。</para>
+</sect2>
+
+<sect2><title>更换代码库地址</title>
+<para>通过<command>svn switch</command>命令可以更改代码库地址，当前地址可以通过<command>svn info</command>命令查看。具体命令格式如下：</para>
+
+<programlisting>svn switch --relocate svn://old svn://new</programlisting>
+</sect2>
+</sect1>
+</chapter>
+
+<chapter><title>正则表达式</title>
+
+<para>在Linux开发应用程序时，正则表达式是经常需要用到的一个工具。关于正则的介绍可以查看这里：<link xlink:href="http://en.wikipedia.org/wiki/Regular_expression"/>。</para>
+
+<para>在POSIX中有定义Basic Regular Expressions和Extended Regular Expressions两套标准，比如sed, grep, awk等命令行工具都对其有支持。另外也有很多程序支持Perl格式的正则，相对来说，Perl的正则功能更为丰富。</para>
+
+<para>以下介绍一些在使用正则时的问题。</para>
+
+<sect1><title>关于$</title>
+
+<para>在正则中 <code>$</code> 有两种含义，可以是字符串末尾，也可以是字符串末尾换行之前，也就是行尾。比如<code>search('\n$', 'foo\n')</code>会匹配 <code>'\n'</code> ，而<code>search('o$', 'foo\n')</code>会匹配 <code>'o'</code> 。在对一行末尾进行替换时需要特别注意，比如<code>re.sub('\s*$', 'bar', 'foo\n')</code>，由于正则默认是greedy的，所以会将最后的换行符也一并替换。</para>
+
+</sect1>
+
+<sect1><title>Python接口</title>
+
+<para>对于Python的正则接口，详细的说明可以查看这里：<link xlink:href="http://docs.python.org/library/re.html"/>。语法上基本与Perl相似。</para>
+
+<sect2><title>函数</title>
+
+<variablelist>
+<varlistentry><term><code>re.search(pattern, string[, flags])</code></term>
+<listitem><para>在字符串中查找正则匹配，另外有一个<code>re.match()</code>函数相对于<code>re.search()</code>隐含了 <code>^</code> ，也就是必须在开始处匹配，为增强代码可读性，可以一率使用<code>re.search()</code>。</para></listitem>
+</varlistentry>
+<varlistentry><term><code>re.sub(pattern, repl, string[, count, flags])</code></term>
+<listitem><para>使用正则进行匹配替换。flags是在Python2.7添加的。在单行模式下，<code>$</code> 符不能被替换，一般不能放在pattern中。</para></listitem>
+</varlistentry>
+<varlistentry><term><code>re.escape(string)</code></term>
+<listitem><para>如果需要动态生成用于正则匹配的pattern，可以使用<code>escape()</code>函数转义其中的特殊字符。</para></listitem>
+</varlistentry>
+</variablelist>
+</sect2>
+
+<sect2><title>多行匹配</title>
+<para>如果需要进行多行匹配，可能需要设置的<code>flag</code>是<code>re.MULTILINE</code>和<code>re.DOTALL</code>，详细的说明可以查看文档。</para>
+</sect2>
+
+</sect1>
+</chapter>
+
+<chapter><title>数据存储</title>
+
+<sect1><title>循环存储</title>
+
+<para>在数据存储时，有时会有这样的需求，只需要存储一星期或一个月的数据。主要是由于不需要存储太多的数据，而如果不能及时清理过期数据，一方面会占用不必要的空间，另一方面影响查询的速率。所以最好可以在数据库中实现一个简单的循环存储的空间。</para>
+
+<para>一个简单的实现方式是隔段时间删除过期数据。但在使用InnoDB时，由于数据删除后不能回收空间，所以这样的方式不能解决空间占用的问题。</para>
+
+<para>以下介绍三种思路。</para>
+
+<sect2><title>索引字段</title>
+<para>可以在数据表中增加一个字段作为索引，比如<literal>idx</literal>，通过循环存储时间、入库时间间隔以及每次入库条数可以计算得到<literal>idx</literal>的最大可能值。在开始入库时，先找出数据库中现有<literal>idx</literal>的最大值，再对其进行递增并通过<code>INSERT ... ON DUPLICATE KEY UPDATE</code>语句进行更新或插入。</para>
+
+<para>但这一方法有两个弊端：</para>
+
+<para>1. 在开始入库时，在插入第一条记录时，需要计算应该使用的<literal>idx</literal>值。</para>
+<para>2. 在有些应用中，并不是每一时刻都插入固定条数的数据，所以如果循环存储以时间为考量，<literal>idx</literal>的最大值无法确定。</para>
+</sect2>
+
+<sect2><title>尝试更新</title>
+<para>另一个方法是先尝试将新数据以<code>UPDATE</code>更新到数据库中，其中<literal>WHERE</literal>筛选已经过期的数据，以<code>LIMIT 1</code>保证一个时刻只更新一条数据。通过<code>mysql_affected_rows()</code>函数可以判定更新是否成功，如果更新成功，表示数据库中有过期数据。如果失败，再进行<literal>INSERT</literal>动作。</para>
+</sect2>
+
+<sect2><title>批量导入</title>
+
+<para>再一个方法也是使用<code>INSERT ... ON DUPLICATE KEY UPDATE</code>，不过先通过<code>SELECT</code>查找所有过期数据的id，之后先对这些id的数据更新，如果还需要插入数据，则新增数据。</para>
+
+<para>这一方法的一个好处是，可以批量的插入数据。通过组织<code>INSERT</code>，一次性插入多个数据，只需要将id字段设置为<code>AUTOINCREMENT</code>，对于需要更新的记录，在id字段插入过期数据的id，需要新增的数据则用<code>NULL</code>。</para>
+</sect2>
+</sect1>
+
+<sect1><title>采样查询</title>
+
+<para>在对一些周期性数据进行图表绘制时，有时对数据的准确性要求不高，所以可以对数据进行采样查询。数据采样有两种思路，在数据库中利用SQL处理，或是在程序中处理。</para>
+
+<sect2><title>SQL</title>
+<para>在SQL中处理需要借助于变量，通过对已读取数据进行计算完成。示例如下：</para>
+
+<programlisting>SELECT * FROM tbl, (SELECT @row := 0) r HAVING (@row := @row + 1) % 100 = 0</programlisting>
+
+<para>关于MySQL中变量的介绍，可以查看这里：<link xlink:href="http://dev.mysql.com/doc/refman/5.0/en/user-variables.html"/></para>
+</sect2>
+
+<sect2><title>程序</title>
+
+<para>对于较为复杂的逻辑，还是在程序中处理比较方便。比如采样，可以先在程序中确定每个采样点的ID或者其它字段特征，再利用<code>SELECT ... WHERE ... IN (...)</code>的方式直接读取。</para>
+
+</sect2>
+
+</sect1>
+
+<sect1><title>中断查询</title>
+<para>对于一些持续时间较长的查询，可以通过<command>mysqladmin processlist</command>查询当前MySQL的运行状态，通过<command>mysqladmin kill &lt;ID&gt;</command>可以立即结束查询。</para>
+
+<para>这两个命令也可以通过<code>SHOW PROCESS</code>和<code>KILL &lt;ID&gt;</code>在<code>mysql_query()</code>中执行，这样也就可以在程序中进行控制。</para>
+</sect1>
+
+<!--
+<sect1><title>insert vs. load</title>
+<para>INSERT和LOAD的性能和功能上理论上的比较。</para>
+</sect1>
+-->
+
+<sect1><title>MySQL配置</title>
+
+<sect2><title>禁用DNS</title>
+<para>在<filename>/etc/my.cnf</filename>的<code>[mysqld]</code>一段中加入下面的配置可以禁用MySQL的DNS反查，从而加快远程连接建立的速度。</para>
+
+<programlisting>skip-name-resolve</programlisting>
+
+<para>这与sshd的机制类似，也可以通过在<filename>/etc/hosts</filename>里加入相应的IP解决。</para>
+</sect2>
+
+<sect2><title>时区</title>
+
+<para>入库时需要确认时区问题，MySQL有一个默认时区为SYSTEM，也就是和系统的时区相同。</para>
+
+<para>通过下面命令可以查看MySQL的时区设置：</para>
+
+<programlisting>SELECT @@global.time_zone, @@session.time_zone;
+</programlisting>
+</sect2>
+
+<sect2><title>开启log</title>
+<para>MySQL的日志信息可以在<filename>/etc/my.conf</filename>中加入下面配置开启：</para>
+
+<programlisting>[mysqld]
+log=/var/log/mysqld.log
+</programlisting>
+</sect2>
+
+</sect1>
+
+<!--
+<sect1><title>sqlite</title>
+<para>TODO</para>
+</sect1>
+-->
+
+</chapter>
+
+<chapter><title>守护进程</title>
+
+<para>守护进程(daemon)是指在系统中一直处于运行状态的程序，比如一些网络服务程序、系统监控程序等。详细介绍可以查看这里：<link xlink:href="http://en.wikipedia.org/wiki/Daemon_(computer_software)"/>。</para>
+
+<para>守护进程与其它程序主要的区别如下：</para>
+<orderedlist>
+<listitem><para>一般只允许一个实例运行；</para></listitem>
+<listitem><para>一般需要提供服务停止与启动的接口；</para></listitem>
+<listitem><para>进程运行时需要保证用户退出系统时依然保持运行；</para></listitem>
+<listitem><para>需要以日志文件形式记录相应运行信息。</para></listitem>
+</orderedlist>
+
+<para>下面就上述几点分别予以介绍。</para>
+
+<sect1><title>单实例运行</title>
+
+<para>Linux中一般使用文件标记来实现单实例运行，比如Fedora中的<filename>/var/lock/</filename>目录就是用于此目的。另外也可以结合下面要介绍的PID文件加以实现。</para>
+</sect1>
+
+<sect1><title>启动和停止</title>
+
+<para>Daemon程序使用PID文件实现对自身的启动和停止，同时保证只有单一实例在系统中运行。不管是用SHELL进行包装还是直接在程序中实现，daemon一般提供这样几个动作：start, stop, restart，分别表示启动、停用和重启服务。下面先分别介绍这几个工作的处理流程：</para>
+
+<variablelist>
+<varlistentry><term><literal>启动服务</literal></term>
+<listitem>
+<orderedlist>
+<listitem><para>确保系统中没有该daemon的进程。如果有，则不能启动程序。</para></listitem>
+<listitem><para>在daemon化之后，创建PID文件，写入pid。</para></listitem>
+<listitem><para>注册<code>atexit()</code>，确保在程序退出时清除PID文件文件。</para></listitem>
+</orderedlist>
+</listitem>
+</varlistentry>
+
+<varlistentry><term><literal>停用服务</literal></term>
+<listitem>
+<orderedlist>
+<listitem><para>如果PID文件不存在，无需其它动作。</para></listitem>
+<listitem><para>如果PID文件存在，kill原有进程，并确认进程不存在。在旧进程异常退出时，比如直接用_exit(2)退出程序时，可能PID文件不会被删除，所以在kill进程之后还要确认PID文件已被删除。</para></listitem>
+</orderedlist>
+</listitem>
+</varlistentry>
+
+<varlistentry><term><literal>重启服务</literal></term>
+<listitem>
+<orderedlist>
+<listitem><para>stop</para></listitem>
+<listitem><para>start</para></listitem>
+</orderedlist>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<para>对于具体的实现，可以参考这里：<link xlink:href="https://github.com/dram/configs/blob/master/bin/wm-assist.py"/>。</para>
+
+</sect1>
+
+<sect1><title>daemon化</title>
+<para>daemon化是指让程序脱离启动它的SHELL，屏蔽一些信号防止被意外中断。简单的处理可以通过<link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/nohup.html"><command>nohup</command>命令</link>完成。Linux中也有一个C接口的<code>daemon()</code>函数。其它脚本可以参考这里实现：<link xlink:href="https://github.com/dram/configs/blob/master/bin/wm-assist.py"/>。</para>
+</sect1>
+
+<sect1><title>日志记录</title>
+<para>对于日志记录，如果是Python等脚本语言，自身应该有日志模块，可以直接使用。比如Python的logging模块。</para>
+<para>而如果是C语言，则可以使用SYSLOG接口或者自行编写文本日志接口。</para>
+<para>另外，服务一般通过SHELL进行组织启动，这也就需要对启动脚本的日志进行相应的记录，下面也将对此作简单介绍。</para>
+
+<sect2><title>Python接口</title>
+<para>Python的logging模块使用非常方便，比如通过下面的配置就可以将日志写入到文件中，其中LOG_LEVEL是指需要写入的日志等级。</para>
+
+<programlisting>logging.basicConfig(
+        filename=LOG_FILE,
+        level=LOG_LEVEL,
+        format="%(levelname)s %(asctime)-15s %(message)s")
+</programlisting>
+
+<para>如果希望将程序异常时的Trackback信息也记录日志，可以使用下面的方法：</para>
+
+<programlisting>try:
+    main()
+    except SystemExit:
+        pass
+    except Exception:
+        logging.exception("Crash from main()")
+</programlisting>
+</sect2>
+
+<sect2><title>SHELL脚本日志</title>
+
+<para>在处理SHELL脚本时有一特殊性，需要在写入日志的同时保留对终端的输出，这样在终端启动脚本时也可以直接看到日志信息。这一功能可以通过命令<command>tee -a</command>实现，示例如下：</para>
+
+<programlisting>(
+..cmd..
+) 2&gt;&amp;1 | tee -a $LOG_FILE
+</programlisting>
+
+<para>在这样处理之后，需要注意的是，整个脚本的程序返回值不会被保留，这个在bash中可以使用下面的代码处理：</para>
+
+<programlisting>exit ${PIPESTATUS[0]}
+</programlisting>
+
+</sect2>
+
+<sect2><title>日志回滚</title>
+<para>在Python中，可以使用logging模块自身的日志回滚功能，这里不再作介绍，可以参考这里：<link xlink:href="https://github.com/dram/configs/blob/master/bin/wm-assist.py"/>。</para>
+
+<para>下面主要来说明利用logrotate服务进行回滚的方式。logrotate是Fedora进行日志回滚处理的服务，但也可以安装到其它发行版中。</para>
+
+<para>基本的配置比较简单，可以查看<literal>logrotate(8)</literal>文档，只是需要注意的是，由于logrotate对于日志的回滚是先删除旧文件再重新创建新文件，所以在编写日志接口时需要在每次写入之后关闭文件句柄，这样logrotate才能真正删除日志文件。或者是在logrotate回滚动作之后重启服务，比如系统对Apache日志的回滚就是使用这一方式。</para>
+</sect2>
+</sect1>
+
+<sect1><title>PATH环境变量</title>
+<para>在编写daemon程序时需要注意，PATH环境变量可能并没有包含<filename>/sbin/</filename>，<filename>/usr/local/bin/</filename>等目录，而程序在开发调试时，是在当前工作的SHELL下执行程序，此时的PATH一般会比较完整。但在开机启动时，有可能启动脚本没有指定PATH，这就导致开发环境与真实环境的不同，BUG也会比较隐蔽。所以一般在调用命令时统一使用全路径。</para>
+
+<para>在Linux中，如果PATH没有定义，默认只会去找<filename>/bin</filename>及<filename>/usr/bin</filename>下的程序。<link xlink:href="http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap08.html">POSIX</link>标准中没有对此作明确规定，详见各系统的<literal>exec(3)</literal>。</para>
+</sect1>
+
+<sect1><title>定时任务</title>
+<para>有时daemon也用于实现定时任务，但定时任务更为方便的是通过<command>crond</command>或者<command>atd</command>实现。具体可以参考：<link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/at.html"/>和<link xlink:href="http://www.opengroup.org/onlinepubs/9699919799/utilities/crontab.html"/>。</para>
+
+<para>需要注意的一点是，<filename>/var/spool/cron/root</filename>文件权限不能是group writable或是world writable，因为如果可写，就会导致其它用户可以使用root权限执行命令。</para>
+</sect1>
+</chapter>
+
+<chapter><title>网络编程</title>
+<sect1><title>内核参数</title>
+
+<para>设置内核参数可以通过在引导时传入或是通过sysctl传入，前者可以查看<filename>Documentation/kernel-parameters.txt</filename>文档。而与网络相关参数一般通过sysctl设置，详细信息可以查看：<filename>Documentation/networking/ip-sysctl.txt</filename>。</para>
+ 
+<sect2><title>tcp_tw_recycle</title>
+<para>当系统中的TIME_WAIT连接数超过一定数值时，内核会提示TCP: time wait bucket table overflow警告，可以通过设定tcp_tw_recycle内核参数进行调整。</para>
+</sect2>
+
+</sect1>
+
+<sect1><title>NAT</title>
+<para>NAT在进行地址转化时，只有在匹配到连接的第一个包时，成会对该包及该连接随后的包进行NAT。也就是一条连接，只有第一个包会进行匹配，随后的包与第一个包的处理方式相同。</para>
+
+<para>这样，新配置的NAT设置不会影响已经建立的连接。再比如，将所有发往本机IP的包DNAT为一不存在的IP，会导致外界无法连入本机，但由本机初始化的包，却可以连到外面，因为这些连接的初始包目的IP不是本机。SNAT的机制也是类似的。</para>
+</sect1>
+
+<sect1><title>访问控制</title>
+
+<para>简单的访问控制可以通过TCP Wrapper或是iptables实现。</para>
+
+<sect2><title>TCP Wrapper</title>
+<para>程序可以通过libwrap库实现简单的访问控制，在<filename>/etc/hosts.allow</filename>和<filename>/etc/hosts.deny</filename>文件中进行配置。</para>
+
+<para>通过<command>strings progname | grep libwrap</command>可以查看服务是否使用了tcp wrapper。</para>
+</sect2>
+
+</sect1>
+</chapter>
+
+<chapter><title>进程间通信</title>
+<sect1><title>管道</title>
+<sect2><title>管道缓冲区</title>
+<para>管道的缓冲区大小虽然可以配置，但由于它的存在，有些程序会受到限制。比如Apache日志输出有一管道接口，但由于管道缓冲的原因，在并发量较大时，可能会影响日志的输出，从而影响Apache整体的性能。</para>
+
+<para>而从另一方面来说，缓冲区的存在也有它的好处，比如在文件较大时，<command>cat tmp.log | head -10</command>会比<command>cat tmp.log >/dev/null</command>快。这个一方面是因为head程序是显示完10行之后直接退出，cat接收到SIGPIPE信息后也退出。而另一方面就是有缓冲的存在。cat在写入一定数据之后，如果head命令没有处理，cat将会因为管道缓冲区已满的原因为被阻塞。</para>
+</sect2>
+
+<sect2><title>监听有名管道</title>
+<para>有时在编写服务端程序时，为方便客户端程序编写，会考虑使用有名管道作为通信机制。这样只要编写客户端的语言支持文件读写即可，甚至使用SHELL脚本也可以控制。</para>
+
+<para>但有一点需要注意的是，在打开有名管道文件时，不管是读还是写，如果另一方没有打开，操作将会被阻塞。一个处理方式是在服务端先使用read-write的形式打开，再打开一个read端口，这样就不会出现阻塞的现象了。</para>
+
+</sect2>
+
+<!--
+<sect2><title>gobject, glib, gtk</title>
+<para>可以在 glib.MainLoop() 中添加对文件的监控，通过 gobject.io_add_watch(fd, condition, callback) 。</para>
+
+<para>关于gtk对没有数据的处理，可以看http://faq.pygtk.org/index.py?req=show&amp;file=faq20.016.htp[这里]。而NAMED PIPE在使用select()或pull()时也有这个问题，需要关闭再重新打开PIPE才能使下一次select()在没有数据时被阻塞，看http://stackoverflow.com/questions/2092255/re-reading-from-a-named-pipe-when-writers-come-and-go[这里]。</para>
+</sect2>
+-->
+</sect1>
+</chapter>
+
+<chapter><title>并发</title>
+<sect1><title>多CPU编程</title>
+<para><code>sysconf(_SC_NPROCESSORS_ONLN)</code>可以用于确定CPU个数。<code>sched_getcpu()</code>可以确定进程在哪个CPU上执行。</para>
+</sect1>
+
+<sect1><title>结束多进程程序</title>
+<para>在多进程设计中，往往需要考虑这样一个问题：如何在父进程中kill所有子进程。因为PID文件中只保存有父进程的PID，外界与父进程通信最为方便，所以子进程的退出工作需要由父进程间接下达。</para>
+
+<para>在<code>kill()</code>中如果pid参数为0，那么会向该进程所在进程组里的所有进程发送信号，可以通过它来实现父进程与子进程的通信。</para>
+
+<para>但有一点需要注意，父进程在调用<code>kill(0, SIGTERM)</code>时，不单给子进程发送SIGTERM信号，同时还会给自己发送。所以父进程在调用<code>kill()</code>之后，需要立即退出，子进程在接收到TERM信号之后也会相继退出。</para>
+
+<para>而子进程对于SIGTERM也应该做同样处理，这样有时也可以直接在SHELL中执行kill或killall命令向子进程发送信号结束所有进程。</para>
+</sect1>
+
+<sect1><title>flock()机制</title>
+<para>首先说明一下advisory锁与mandatory锁的区别。从字面上理解，advisory是建议性的，而mandatory则是强制性的。advisory lock只是文件的一个属性，它并没有对文件的内容进行保护，程序在没有获得锁时仍然可以修改文件的内容。而mandatory lock则是对文件的内容进行保护。</para>
+
+<para>flock是一个advisory锁，所以文件的完整性是需要由程序保证的。</para>
+
+<para>在使用flock时，需要明确LOCK_SH和LOCK_EX的概念。在一个文件被锁的前提下，如果该锁是LOCK_EX，所有其它请求LOCK_SH或LOCK_EX的进程都将被block，当该锁是LOCK_SH时，进程请求LOCK_SH将被通过，而请求LOCK_EX将被block。</para>
+
+<para>Linux中flock是基于file table实现的，所以在<code>fork()</code>或<code>dup()</code>之后，可能有多个fd共享锁，而解锁必须要显式地使用LOCK_UN或关闭所有与该file table entry相关联的fd。</para>
+
+<para>在<link xlink:href="http://en.wikipedia.org/wiki/File_locking"/>中有对Linux及Windows中的文件锁比较详尽的说明。</para>
+
+</sect1>
+
+<sect1><title>SHELL脚本互斥</title>
+<para>在SHELL中实现互斥，有两种简单的方式。</para>
+
+<para>一是利用普通文件，在脚本启动时检查特定文件是否存在，如果存在，则等待一段时间后继续检查，直到文件不存时创建该文件，在脚本结束时删除文件。为确保脚本在异常退出时文件仍然能被删除，可以借助于<code>trap "cmd" EXIT TERM INT</code>命令。一般这类文件存放在<filename>/var/lock/</filename>目录下，操作系统在启动时会对该目录做清理。</para>
+
+<para>另一种方法是是使用flock命令。使用方式如下，这个命令的好处是等待动作在flock命令中完成，无需另外添加代码。</para>
+
+<programlisting>(
+flock -o 300
+
+trap "flock -u 300" EXIT TERM INT PIPE
+
+...cmd...
+
+) &gt;/tmp/file.lock</programlisting>
+</sect1>
+
+</chapter>
+
+<chapter><title>多语言</title>
+<sect1><title>Unicode编程</title>
+<para>在Unicode中并不区分简繁体，而是通过字型来编码，比如“一”字，不管简体还是繁体，编码是相同的。所以不以编码区间的形式来筛选简体中文。另外，同样由于是字型编码的原因，在Unicode或是UTF-8中，中文编码不再按拼音顺序。如果需要按照拼音序进行排序，则要先转化为GBK编码。</para>
+
+<para>在C程序中，如果需要进行Unicode编程，需要先调用<code>setlocale(LC_ALL, "")</code>设置编码为系统当前默认编码。如果没有调用该函数，程序使用的编码为<literal>C</literal>。</para>
+
+<para><code>getwc()</code>等函数可以直接读取UTF-8文件，不需要先通过iconv转化为unicode或wchar_t编码。</para>
+</sect1>
+</chapter>
+
+<chapter><title>软件打包</title>
+
+<para>在Linux中，一般程序以源码方式发布，而软件的二进制打包交由各发行版处理。这虽然减轻了软件开发者的负担，但给用户带来了不便，因为各发行版间可能存在不兼容。</para>
+
+<para>但由于各发行版在软件打包上的处理很不相同，所以也没有更好的解决方法。下面主要通过对Fedora中的RPM打包机制的介绍来了解发行版在打包时进行的一些处理。</para>
+
+<para>RPM最初由RedHat开发，是LSB标准的一部分，被大量商业Linux发行版采用。</para>
+
+<para>关于RPM打包的更为详尽的文档可以查看Fedora的<link xlink:href="http://docs.fedoraproject.org/">RPM Guide</link>。</para>
+
+<para>另外也可以查看Packaging software with RPM系列文档：<link xlink:href="http://www.ibm.com/developerworks/library/l-rpm1/"/>, <link xlink:href="http://www.ibm.com/developerworks/linux/library/l-rpm2/"/>, <link xlink:href="http://www.ibm.com/developerworks/linux/library/l-rpm3/"/>。</para>
+
+<sect1><title>二进制包的优点</title>
+
+<para>先来介绍一下相对于源码包来说，二进制包的一些优点，而之后的介绍也是基于这些点展开。</para>
+
+<orderedlist>
+<listitem><para>方便版本控制，因为在包管理工具中可以看到当前安装的版本。而通过源码安装时，如果软件作者没有在程序中标明版本，那就无从知道当前安装的版本了。另外，除了标明官方程序的版本外，还可以进一步标明打包版本，这有利于维护第三方补丁。</para></listitem>
+<listitem><para>防止文件冲突，通过二进制包组织后，系统可以跟踪当前安装的所有包以及它们的文件，通过检查可以防止新安装的包覆盖原有包中的文件。</para></listitem>
+<listitem><para>便于升级，可以保证原先安装的文件全部删除。</para></listitem>
+<listitem><para>可以指定依赖关系，保证软件正常运行。由于程序一般还需要依赖于其它第三方库，通过在打包时指定依赖关系，可以方便地自动安装程序的依赖。但依赖关系的指定同时也会带来复杂性，所以也有一些发行版并不处理依赖，而将它交于用户自行处理。比如Slackware, CRUX等。</para></listitem>
+</orderedlist>
+
+</sect1>
+
+<sect1><title>准备</title>
+
+<para>RPM包文件的格式是在cpio文件基础上加入了一些二进制头信息，主要使用rpmbuild命令生成。在调用rpmbuild之前，还需要做一些准备工作。主要是准备编译生成RPM包所需要目录结构以及定义一些基本的宏。可以通过<command>rpmdev-setuptree</command>命令完成这些操作，也可以用下面的命令：</para>
+
+<programlisting>mkdir -p ~/rpmbuild/{BUILD,RPMS,S{OURCE,PEC,RPM}S}
+echo "%_topdir $HOME/rpmbuild" > ~/.rpmmacros
+</programlisting>
+
+</sect1>
+
+<sect1><title>基本命令</title>
+<programlisting>rpmbuild -bb spec-file
+rpmbuild --rebuild name-ver-rel.src.rpm
+rpmbuild -ta tarball # 编译包含spec的tar包
+</programlisting>
+</sect1>
+
+<sect1><title>软件包名称</title>
+<para>RPM包名称一般为这样的形式：<filename>name-version-release.architecture.rpm</filename>。</para>
+<para>RPM中的版本包括软件版本以及包发布(release)版本。软件版本指软件官方发布的版本，而包发布版本则是在软件包没有改动而包组织自身改变时指定，比如打了一些补丁。</para>
+</sect1>
+
+<sect1><title>依赖关系</title>
+<para>RPM的依赖可以在spec文件中指定，同时rpmbuild也会在生成RPM包时自动生成一份依赖列表。这虽然在一定程度上提高了打包的效率，但也会带来一些不必要的复杂性。如果不需要这一功能，可以在spec文件中有加入<code>AutoReq no</code>说明。</para>
+<para>另外rpmbuild还会自动生成一个Provides列表，用于表示该包提供了哪些库，如果也不需要，可以使用<code>AutoProv no</code>关闭，<code>AutoReqProv no</code>将同时禁用这两项功能。</para>
+<para>也可以在调用rpmbuilds时使用<literal>--nodeps</literal>参数。</para>
+</sect1>
+
+<sect1><title>安装脚本</title>
+<para>有一些软件会需要在安装包时同时执行一些命令。RPM可以在spec文件中进行指定。对应于包的安装、卸载或升级，这里有四处地方可以指定需要执行的命令，分别是：<code>%pre</code>, <code>%post</code>, <code>%preun</code>, <code>%postun</code>。</para>
+
+<para>从字面上就可以理解这四段脚本在什么时候会被执行。在安装软件时，会先执行<code>%pre</code>，再安装文件，最后执行<code>%post</code>。而删除时，会先执行<code>%preun</code>，再删除文件，最后执行<code>%postun</code>。</para>
+
+<para>但是，需要特别注意的是，在升级软件包时，这四段代码会变得相当复杂。因为RPM在升级时并不是先删除老版本，再安装新版本包。它是先安装新版本包，再删除不再需要的老版本文件。与此相对应的，脚本执行的顺序是先执行新版本包中的<code>%pre</code>和<code>%post</code>，再执行老版本包中的<code>%preun</code>和<code>%postun</code>。</para>
+
+<para>这样会带来很多的问题，比如在新版本包<code>%post</code>中生成的文件可以会在老版本删除文件或是<code>%preun</code>和<code>%postun</code>中被删除。</para>
+
+<para>而解决这一问题的方法也不是那么自然，rpm在安装时会向这些脚本传入一个参数，用于标明在该包完成安装或卸载之后系统会有几个版本的该软件。也就是说在升级时，<code>%pre</code>和<code>%post</code>会传入<code>2</code>，而<code>%preun</code>和<code>%postun</code>会传入1。而在安装时，<code>%pre</code>和<code>%post</code>传入<code>1</code>。在删除时，<code>%preun</code>和<code>%postun</code>会传入0。具体可以再查看这里的说明：<link xlink:href="http://www.ibm.com/developerworks/library/l-rpm2/"/>。</para>
+
+<para>所以如果没有必要，一般最好不要加入这些脚本，如果确实需要，最好是对传入的参数进行判断，以此对动作加以区分。</para>
+</sect1>
+
+<sect1><title>注意事项</title>
+<itemizedlist>
+<listitem><para>一般不建议使用root来打包，这样可以防止因为打包时的错误而破坏当前系统。但由于有些软件包在安装时会使用install命令对文件所有者更改为root，这样普通用户就无法完成RPM的打包，这一问题可以通过fakeroot命令解决。</para></listitem>
+<listitem><para>不要在rpm包中加入交互的操作。因为很多rpm包的安装都是自动的，也有一些是用GUI工具进行rpm包安装，所以命令行的交互将会带来很大的麻烦。</para></listitem>
+</itemizedlist>
+</sect1>
+
+</chapter>
+
+</book>
+
+<!-- vim: set ft=docbk fdm=syntax : -->
