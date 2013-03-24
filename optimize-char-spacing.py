@@ -42,11 +42,14 @@ def all_text_nodes(root):
                 operator.add, map(all_text_nodes, root.childNodes))
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print "Usage: convert.py in.xml out.xml"
+    if len(sys.argv) < 2:
+        print "Usage: convert.py in [out]"
         sys.exit(1)
 
-    infile, outfile = sys.argv[1], sys.argv[2]
+    if len(sys.argv) == 2:
+        infile, outfile = sys.argv[1], '-'
+    else:
+        infile, outfile = sys.argv[1], sys.argv[2]
 
     doc = minidom.parse(infile)
 
@@ -71,4 +74,7 @@ if __name__ == '__main__':
             if not nxt.data[0].isspace():
                 nxt.data = ' ' + nxt.data
 
-    codecs.open(outfile, 'w', 'utf-8').write(doc.toxml())
+    if  outfile == '-':
+        print doc.toxml().encode('utf-8')
+    else:
+        codecs.open(outfile, 'w', 'utf-8').write(doc.toxml())

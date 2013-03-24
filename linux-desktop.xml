@@ -150,9 +150,13 @@
 Firefox Cache
 </term>
 <listitem>
+
 <para>
-挂载Firefox缓存到共享内存目录<footnote><para>这一优化对Firefox的响应速度会有较大提升，在 <link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://wiki.archlinux.org/index.php/Speed-up_Firefox_using_tmpfs">http://wiki.archlinux.org/index.php/Speed-up_Firefox_using_tmpfs</link> 中有详细的介绍。</para></footnote>。方法是在<literal>about:config</literal>配置页面添加<literal>browser.cache.disk.parent_directory</literal>参数，值设置为<literal>/dev/shm/firefox-cache</literal>，再通过<literal>install -dm700 /dev/shm/firefox-cache</literal>新建该目录。
+挂载Firefox缓存到共享内存目录<footnote><para>这一优化对Firefox的响应速度会有较大提升，在 <link xlink:href="http://wiki.archlinux.org/index.php/Speed-up_Firefox_using_tmpfs">http://wiki.archlinux.org/index.php/Speed-up_Firefox_using_tmpfs</link> 中有详细的介绍。</para></footnote>。方法是在<literal>about:config</literal>配置页面添加<literal>browser.cache.disk.parent_directory</literal>参数，值设置为<literal>/dev/shm/firefox-cache</literal>。
 </para>
+
+<para>注意系统需要启用<filename>/dev/shm</filename>，可以查看在<filename>/etc/fstab</filename>中是否包含：<literal>none /dev/shm tmpfs defaults 0 0</literal>。</para>
+
 </listitem>
 </varlistentry>
 </variablelist>
@@ -921,13 +925,35 @@ fi</screen>
 -->
 <sect1><title>内核定制</title>
 
-<para>在定制内核时首先需要考虑引导问题，其中包括磁盘IO相关驱动，文件系统相关驱动。这些驱动必须编译到内核中，而不是以模块的方式。不过现在有一个initrd文件系统，利用mkinitrd命令可以将需要的模块整合作为二次引导。</para>
+<para>在定制内核时首先需要考虑引导问题，其中包括磁盘IO相关驱动，文件系统相关驱动。这些驱动必须编译到内核中，而不是以模块的方式。不过可以借助于initrd文件系统将需要的模块整合作为二次引导。</para>
 
 <para>比如在VirtualBox中，Device Drivers->SCSI device support->SCSI (disk|CDROM|generic) 都应该编入内核。而File systems一块则可以根据需要选择。</para>
 
-<sect2><title>声卡驱动</title>
-<para>在Linux中，声卡驱动主要有OSS和ALSA两种选择。而更为上层的应用框架则又有Jack, PluseAudio等。这里使用OSS作为声卡的驱动。</para>
+<para>下面以CRUX为例，说明内核定制的基本流程。</para>
+
+<para>在配置内核参数时，可以使用<command>make localyesconfig</command>，它会基于当前系统运行的内核的配置生成新的配置文件，并将当前加载的模块以内嵌的方式包含。</para>
+
+<para>但是由于安装系统没有用到显卡、声卡等模块，所以还需要在此基础上再进行调整，同时作为安装程序的引导内核为了保证兼容性，会包含一些当前设备并不需要的模块，也可以进行裁剪。</para>
+
+<sect2><title>文件系统</title>
+<para>CRUX默认把常用的文件系统都包含在内核中，在调整时可以去除一些。</para>
+
+<para>另外，如果以后需要访问Windows分区的数据，需启用NTFS支持。</para>
 </sect2>
+
+<sect2><title>声卡驱动</title>
+<para>在Linux中，声卡驱动框架主要有OSS和ALSA两种选择。更为上层的应用框架则有Jack, PluseAudio等。CRUX默认没有启用ALSA，需要启用它，同时需要启用声卡硬件驱动，比如Intel HD Audio。</para>
+</sect2>
+
+<sect2><title>其他</title>
+<para>其他还需要注意的有：</para>
+<orderedlist>
+  <listitem><para>键盘和鼠标等输入设备一般需要启用Event interface；</para></listitem>
+  <listitem><para>需要选择无线网卡驱动：</para></listitem>
+  <listitem><para>dbus需要System V IPC支持。</para></listitem>
+</orderedlist>
+</sect2>
+
 </sect1>
 </chapter>
 
