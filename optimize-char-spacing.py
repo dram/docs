@@ -53,6 +53,13 @@ if __name__ == '__main__':
 
     doc = minidom.parse(infile)
 
+    for tag in doc.getElementsByTagName("xi:include"):
+        sub = minidom.parse(tag.getAttribute("href"))
+        parent = tag.parentNode
+        for child in sub.childNodes:
+            parent.insertBefore(child, tag)
+        parent.removeChild(tag)
+
     for node in all_text_nodes(doc):
         node.data = add_space(node.data)
 
