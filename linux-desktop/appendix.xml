@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<appendix
+  xmlns="http://docbook.org/ns/docbook"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>Fedora软件包管理</title>
+
+<para>包管理对于一个发行版来说是非常重要的，Fedora以RPM包的形式组织软件，主要通过rpm和yum这两个工具。其中rpm是包管理的基础程序，yum是对rpm的包装，增加了包下载及依赖的自动处理等功能。</para>
+<para>关于Fedora软件管理的详细介绍，可以查看<link xlink:href="http://docs.fedoraproject.org">Feodra Software Management Guide</link>。</para>
+<para>Fedora从RedHat发展而来，软件支持还是比较丰富的，除了官方的源之外，还可以到<link xlink:href="http://rpmfusion.org/">rpmfusion</link>安装官方没有收录的包。</para>
+<para>在<link xlink:href="http://pkgs.fedoraproject.org/gitweb/">这里</link> 可以查看Fedora包的spec文件，不过一般不需要了解RPM包的描述方式。</para>
+<para>Fedora已带有图形化的工具，但下面还是介绍rpm和yum这两个命令行工具的使用，以此对Fedora的包管理机制有一个较深入的理解。</para>
+<sect1><title>YUM命令</title>
+
+<variablelist>
+<varlistentry><term><literal>yum search pattern</literal></term>
+<listitem><para>查找软件包</para></listitem>
+</varlistentry>
+<varlistentry><term><literal>yum install pkg-name</literal></term>
+<listitem><para>从YUM源安装包</para></listitem>
+</varlistentry>
+<varlistentry><term><literal>yum downgrade pkg-name</literal></term>
+<listitem><para>对包进行降级，如果更新后有问题时有用</para></listitem>
+</varlistentry>
+<varlistentry><term><literal>yum info pkg-name</literal></term>
+<listitem><para>查看包信息</para></listitem>
+</varlistentry>
+<varlistentry><term><literal>yum update [pkg-name]</literal></term>
+<listitem><para>更新软件包，如果不指定名称，更新系统所有包</para></listitem>
+</varlistentry>
+<varlistentry><term><literal>yum clean</literal></term>
+<listitem><para>清空缓存</para></listitem>
+</varlistentry>
+<varlistentry><term><literal>yum list installed ['pattern']</literal></term>
+<listitem><para>显示所有安装的包，类似于<literal>rpm -qa</literal></para></listitem>
+</varlistentry>
+<varlistentry><term><literal>yum provides file</literal></term>
+<listitem><para>显示文件所属的包，类似于<literal>rpm -qf</literal></para></listitem>
+</varlistentry>
+<varlistentry><term><literal>yum list extras</literal></term>
+<listitem><para>显示没有库中不包含的软件包</para></listitem>
+</varlistentry>
+<varlistentry><term><literal>yum deplist pkg-name</literal></term>
+<listitem><para>显示依赖关系</para></listitem>
+</varlistentry>
+</variablelist>
+<para>ArchLinux中，在利用pacman删除包时，可以通过<literal>-Rs</literal>参数同时删除自动安装的依赖包。而yum没有这个功能，可以在<literal>yum-utils</literal>包中找到<literal>package-cleanup</literal>命令，通过它的<literal>--leaves</literal>参数可以查找到那些已经不再需要的lib包。</para>
+<para>在利用yum update系统时，可以通过<literal>-x</literal>参数指定不升级特定包。也可以添加到<literal>yum.conf</literal>的<literal>exclude</literal>中。</para>
+<para>另外，yum中还有group的概念，可以方便安装由官方分类好的一组包。包括以下几个命令：</para>
+<screen>yum groupinstall
+yum groupupdate
+yum grouplist
+yum groupremove
+yum groupinfo</screen>
+</sect1>
+<sect1><title>YUM配置</title>
+
+<para>对于YUM的配置，其中软件源的配置是非常重要的一部分。YUM关于源的配置在<literal>/etc/yum.repos.d/</literal>目录中。该目录下的每一个文件针对一个软件库，像镜像等的设置都存放在对应软件库文件中。</para>
+<para>如果需要禁用某个软件库，有两种方式，一种是删除对应的库配置文件或重命名为其它扩展名。也可以将其中的<literal>enabled</literal>配置项设为<literal>0</literal>。通过<literal>enabled</literal>设置的一个好处是，可以通过yum的<literal>--eanblerepo</literal>参数临时重新启用。<literal>yum repolist enabled</literal>可以显示所有启用的软件库。</para>
+<para>针对每一个软件库，YUM默认会从<link xlink:href="http://mirrors.fedoraproject.org"/>下载一份镜像列表，然后随机地选择从哪一个镜像下载。这样有时效率并不高，因为各个源的访问速率可能会相差很大。可以通过对源进行相应的配置，让YUM优先选择一些源。</para>
+<para>比如将fedora和fedora-updates这两个软件库的镜像设置为优先使用网易的镜像，可以在<literal>/etc/yum.repos.d/fedora.repo</literal>和<literal>fedora-updates.repo</literal>文件中添加<literal>failovermethod</literal>及<literal>baseurl</literal>设置：</para>
+<screen>failovermethod=priority
+baseurl=http://mirrors.163.com/fedora/updates/$releasever/$basearch/</screen>
+<para>另外，也可以安装<literal>yum-plugin-fastestmirror</literal>包，让yum自动选择最快的镜像。</para>
+</sect1>
+<sect1><title>RPM</title>
+
+<para>通过对yum的介绍，可以看到yum已经基本上可以完成软件管理的功能，一般可以不再直接使用rpm命令了，这里只列出几个yum无法完成的功能：</para>
+<variablelist>
+<varlistentry><term><literal>rpm -ql pkg-name</literal></term>
+<listitem><para>显示软件包中包含的所有文件</para></listitem>
+</varlistentry>
+<varlistentry><term><literal>rpm -ql -p path/to/rpm</literal></term>
+<listitem><para>列出一个rpm包中的所有文件</para></listitem>
+</varlistentry>
+</variablelist>
+<para>实际上，yum-utils中的repoquery可以用来完成这一功能。</para>
+</sect1>
+</appendix>

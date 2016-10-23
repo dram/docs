@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<chapter
+  xmlns="http://docbook.org/ns/docbook"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>文字处理</title>
+
+<para>在Windows中，较为常用的文字处理软件是WPS或者Word等所见即所得(WYSIWYG<footnote><para>WYSIWYG是What You See Is What You Get的缩写。关于它的详细说明，可以看这里：<link xlink:href="http://en.wikipedia.org/wiki/WYSIWYG"/>。</para></footnote>)的编辑器。Linux也有类似的工具，比如OpenOffice.org、KOffice等。</para>
+<para>但除了所见即所得编辑器之外，还可以使用TeX等标记型语言来处理文档的排版，相对于所见即所得的编辑器来说，使用标记型语言编写的文档维护更加方便、样式更为统一，很多时候最终生成的文档也更为美观。</para>
+<para>但这类标记型语言有一个的缺点是标记比较复杂，有一定的入门门槛，并且在编写文档时经常需用输入大量的标记。不过通过对编辑器进行合理的配置可以部分解决这一问题。下面主要介绍编写本文所使用的DocBook标记语言，它以XML格式来组织文本。</para>
+<para>读者也可以选择一些轻量级标记语言，比asciidoc, txt2tags, markdown, pandoc等，相对来说，这些轻量级的标记语言标记更为简洁。它们不是直接生成最终文档，而是先转化为Tex、Docbook等标记语言，再最终转化为所需要的文档。</para>
+<para>这里使用的是DocBook 5.0版，详细的文档可以查看<link xlink:href="http://www.docbook.org/tdg5/en/html/docbook.html"/>和<link xlink:href="http://www.sagehill.net/docbookxsl/index.html"/>。</para>
+
+<sect1><title>工具</title>
+<para>由于DocBook本身是XML文档，所以可以借助一些通用的XML处理工具对DocBook文档进行处理。这里主要用到了Jing<footnote><para>另一个常用的XML格式检查工具是xmllint，相对来说，Jing对RELAX NG有更好的支持，这在编写DocBook文档时非常重要，借助于它可以更容易发现可能的格式错误。</para></footnote>和xsltproc这两个工具，分别用于语法检查和格式转化。</para>
+<para>先从DocBook官网下载DocBook5.0 Schemas的代码(http://www.docbook.org/xml/5.0/docbook-5.0.zip)，可以通过其中的<filename>rng/docbook.rng</filename>文件结合Jing工具对DocBook文档进行语法上的检查，具体方式如下：</para>
+<screen>java -jar /path/to/jing.jar /path/to/rng/docbook.rng file.xml</screen>
+<para>而DocBook到其它格式的转化则需要借助与docbook-xsl-ns(http://sourceforge.net/projects/docbook/files/)和xsltproc工具，下面的命令就是通过它们将DocBook文档转化为fo文档，之后再交由FOP工具将fo转化为pdf文档：</para>
+<screen>xsltproc -o output.fo /path/to/xsl-ns-stylesheets/fo/docbook.xsl input.xml</screen>
+<para>关于FOP的设置随后会详细介绍，接下来先介绍对编辑器的配置。</para>
+</sect1>
+
+<sect1><title>编辑器</title>
+
+<para>这里选择使用Vim作为DocBook文档的编辑器，Vim自身对XML编辑上的支持并不多，需要先从<link xlink:href="http://www.vim.org/scripts/script.php?script_id=1397"/>下载一个插件，这个插件可以对XML tag进行自动补全，并提供tag跳转等功能。</para>
+<sect2><title>语法</title>
+<para>由于DocBook文档一般是较大，并且有较多的长行，Vim在对这类XML文本进行语法高亮时性能较差，直接影响编辑的效率，所以有必要对它进行一些调整。<link xlink:href="https://github.com/dram/configs/blob/master/.vim/syntax/docbk.vim"/>这份Vim语法文件是针对DocBook进行的精减，同时支持对章节的代码折叠，在DocBook文档的最后加入下面modeline的设置即可加载该文件并启用折叠：</para>
+<screen>&lt;!-- vim: set ft=docbk fdm=syntax : --&gt;</screen>
+</sect2>
+<sect2><title>缩进</title>
+<para>Vim默认开启XML文档的缩进，如果需要关闭的话，可以在<filename>$HOME/.vim/indent/</filename>目录新建<filename>xml.vim</filename>文件，加入下面的内容：</para>
+<screen>let b:did_indent = 1</screen>
+</sect2>
+<sect2><title>折叠</title>
+<para>在语法一节中已经提到如何开启代码折叠，另外还可以在ftplugin中设置<literal>foldlevel</literal>以及<literal>foldnestmax</literal>这两个参数设置默认展开几级以及最多折叠几级。</para>
+</sect2>
+<sect2><title>移动</title>
+<para>在安装了xml.vim插件之后，可以通过<literal>[[</literal>, <literal>]]</literal>, <literal>[]</literal>, <literal>][</literal>这几个按键在XML标签之间移动。但感觉默认的设置不是很习惯，可以在xml.vim中对其进行重新配置，可以参考<link xlink:href="https://github.com/dram/configs/tree/master/.vim/ftplugin/xml.vim"/>，重新设罟后的按键含义为：</para>
+<variablelist>
+<varlistentry><term><literal>[[</literal></term><listitem><para>上一个open tag</para></listitem></varlistentry>
+<varlistentry><term><literal>[]</literal></term><listitem><para>上一个close tag</para></listitem></varlistentry>
+<varlistentry><term><literal>][</literal></term><listitem><para>下一个open tag</para></listitem></varlistentry>
+<varlistentry><term><literal>]]</literal></term><listitem><para>下一个close tag</para></listitem></varlistentry>
+</variablelist>
+</sect2>
+</sect1>
+
+<sect1><title>脚本</title>
+
+<para>从以上的介绍中可以看到，将DocBook转化为PDF文档需要结合使用几个工具，可以通过Makefile对其进行管理，生成本文档所用的Makefile可以到这里查看： https://github.com/dram/docs/blob/master/Makefile。</para>
+</sect1>
+
+<sect1><title>FOP中文支持</title>
+
+<para>FOP本身是支持多语言的，这里唯一需要处理的是字体设置的问题。</para>
+<para>本文档使用的字体主要有：文鼎PL简报宋、文鼎PL简中楷、Computer Modern Unicode以及Droid Sans Fallback。</para>
+<variablelist>
+<varlistentry><term><literal>文鼎PL简报宋</literal></term>
+<listitem><para><link xlink:href="http://ftp.debian.org/debian/pool/main/t/ttf-arphic-gbsn00lp/ttf-arphic-gbsn00lp_2.11.orig.tar.gz"/></para>
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>文鼎PL简中楷</literal></term>
+<listitem><para><link xlink:href="http://ftp.debian.org/debian/pool/main/t/ttf-arphic-gkai00mp/ttf-arphic-gkai00mp_2.11.orig.tar.gz"/></para>
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>Computer Modern Unicode</literal></term>
+<listitem><para><link xlink:href="http://canopus.iacp.dvo.ru/~panov/cm-unicode/"/></para>
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>Droid Sans Fallback</literal></term>
+<listitem><para><link xlink:href="http://android.git.kernel.org/?p=platform/frameworks/base.git;a=tree;f=data/fonts"/></para>
+</listitem>
+</varlistentry>
+</variablelist>
+<para>FOP不能直接读取其中的Droid Sans Fallback字体，需要使用fontforge打开该字体再重新导出为TTF字体。</para>
+<para>设置FOP的字体分两步进行。先是让FOP识别这些字体，这个通过FOP的配置文件完成，再是让PDF文档使用这些字体，这个通过DocBook的XSL文件进行设置。详细的配置可以查看下面两份文件：</para>
+<variablelist>
+<varlistentry><term><literal>fop.xconf</literal></term>
+<listitem><para><link xlink:href="https://github.com/dram/docs/blob/master/fop.xconf"/></para>
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>fo.xsl</literal></term>
+<listitem><para><link xlink:href="https://github.com/dram/docs/blob/master/fo.xsl"/></para>
+</listitem>
+</varlistentry>
+</variablelist>
+<para>最终在调用fop生成PDF文件，命令示例如下：</para>
+<screen>fop -c fop.xconf input.fo output.pdf</screen>
+</sect1>
+
+<sect1><title>PDF优化</title>
+
+<para>单是设置了字体后FOP生成的PDF效果依然不是很理想。还需要进行一些微调，配置还是写在上面提及的<literal>fo.xsl</literal>文件中。另外中英文混排的问题通过脚本进行优化。</para>
+
+<sect2><title>中英文混排</title>
+
+<para>在TeX中，有专门的xeCJK包提供对中英文混排的优化，而在FOP中并没有对其做优化。这样看起来中文和英文会有些拥挤，这里通过一个脚本分析DocBook的XML文件，自动在中文和英文间加入空格，以此实现与xeCJK相似的功能。</para>
+<para>详细代码可以从这里查看：<link xlink:href="https://github.com/dram/docs/blob/master/optimize-char-spacing.py"/>。</para>
+</sect2>
+
+<sect2><title>排版</title>
+
+<para>在FOP中可以对很多排版细节进行详细的设置，比如首行缩进两格可以通过下面的方式配置：</para>
+<screen>&lt;xsl:attribute-set name="normal.para.spacing"&gt;
+  &lt;xsl:attribute name="text-indent"&gt;2em&lt;/xsl:attribute&gt;
+&lt;/xsl:attribute-set&gt;</screen>
+<para>行距设置：</para>
+<screen>&lt;xsl:param name="line-height"&gt;1.6&lt;/xsl:param&gt;</screen>
+<para>还有比如正文字体大小、标题高度等等，都可以设置，这里就不再一一列举，读者可以从<literal>fo.xsl</literal>文件中找到相应的设置。关于这些参数的说明可以到这里查看：<link xlink:href="http://docbook.sourceforge.net/release/xsl/current/doc/fo/index.html"/>。</para>
+</sect2>
+
+<sect2><title>封面调整</title>
+<para>在FOP中，如果需要对封面进行调整，需要先根据docbook-xsl目录中的<filename>fo/titlepage.templates.xml</filename>进行调整，再利用<command>xsltproc</command>通过<filename>template/titlepage.xsl</filename>将新的模板转化为XSL文件，之后就可以通过这个XSL文件对DocBook文本进行转化了。</para>
+</sect2>
+</sect1>
+</chapter>

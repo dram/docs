@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<chapter
+  xmlns="http://docbook.org/ns/docbook"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>操作系统</title>
+
+<para>操作系统，作为对底层硬件的封装和抽象，为上层应用程序提供访问硬件资源的接口，这是内核的基本功能，从这一层意义来说，如果将计算机作为桌面应用的工具，用户基本上不需要关心操作系统层面的东西。</para>
+<para>就比如线程，它究竟是在用户层还是在内核实现，这对于用户来说没有区别，甚至于应用程序是利用多线程还是多进程机制实现，用户也可以不关心。就像Google在宣传Chrome浏览器时，强调的一点是它的每一个标签页都是独用进程，所以其中任何一个页面崩溃都不会影响其它标签页。但这更多的只是对Firefox不稳定性的一个攻击，而不能说是一个优点，并且理想的程序就不应该让“不合法的页面内容导致页面崩溃”这一现象出现。所以对用户来说，如果不出错，两者的体验是完全相同的。但用户需要知道“多任务”这一概念，“单任务”和“多任务”将促成全然不同的事务组织方式 <footnote><para>当然，至于单任务和多任务，到底人脑更适合哪一种方式，这又是另一层面的问题了，至少，“多任务”在大部分情况下确实提高了工作效率。</para></footnote>。</para>
+<para>另外，由于操作系统功能相当明确，所以理想情况下在系统稳定后是无需再做大幅更新的，Windows XP就是一个很好的例子，从2001年发布到现在将近10年，依然在大范围的使用。然而硬件和软件的更新换代是相互推动的，商业公司必须促使用户更新产品，以此才能获取利润。所以即使对于一个操作系统来说，Windows XP已经够用，Microsoft还是需要推出Windows 7，对于XP的支持最终还是要停止。这样的后果是，在越来越多的应用软件只对Windows 7支持后，用户不得不对操作系统进行更新，而这一更新，不是因为操作系统本身的新功能，而只是为了能够支持新的应用软件。所以微软在更新操作系统时，并在是仅仅更新内核，更是要更新桌面体验，以些来吸引用户。</para>
+<para>这就扩大了操作系统的概念，除了内核外，还包含软件包管理系统、桌面环境和大量的基础程序等。这也是我们平时说的操作系统的概念，比如Windows和Mac。所以用户还是需要关心一些与操作系统相关的东西的，这样可以了解计算机软件的运行基础。这样的操作系统概念在Linux中对应的就是发行版<footnote><para>关于发行版的定义，可以查看这里：<link xlink:href="http://en.wikipedia.org/wiki/Linux_distribution"/>。</para></footnote>的概念。桌面环境将在下一章再作介绍，这里主要就Linux发行版以及软件包管理机制作一些讨论。</para>
+
+<sect1><title>发行版</title>
+
+<para>对于发行版，首先有必要考虑一个问题：为什么Linux有如此多的发行版？这或许正的Linux自由的体现，而同时也让我们看到了自由的代价。</para>
+<para>用户的需求是多样的，这是必然。对于商业系统，会根据多种因素对用户进行归并、取舍，最终也只是维护少数几个版本，比如微软在Windows系统分为Desktop, Server, Mobile等版本。而在Linux中，用户除了有选择发行版的自由外，还有制作发行版的自由，而且制作的难度不是很高 <footnote><para>从某种意义上说，这可以用帕金森的鸡毛蒜皮定律或芝麻绿豆定律(Parkinson’s Law of Triviality)来解释。越是简单的，大家都了解的事，不同的意见也就越多。这个时候，自由有时就并非好事，自由之下意见不和可能就要导致各自为政，从而浪费了大量的资源。</para></footnote>，这可能是导致发行版本泛滥的一个主要原因。</para>
+<para>虽然，很多时候，矛盾是不可调和的，就比如上面提到的桌面用户的需求和服务器用户的需求在很多方面必然是不同的。但人往往太容易陷入细节，太容易追求局部的、片面的完美。为了一些细小的分歧而将一个项目分支为两个项目。虽然对于各自项目来说，都实现了各自的需求，都达到某种层度上的完美，但从全局看，固定的资源，原本可以在同一个项目上发力，而现在却要分为两拨，其中必然有大量的重复劳动，是很大的损失，从这点上说又是完全不能称之为完美的。</para>
+<para>那么对于普通用户来说，对于这个发行版，他最需要的是什么？这里我们只就桌面应用的用户进行讨论。如果除去不同发行版在不同软件上的选择，那么发行版需要提供的最重要的功能就是方便的包管理机制以及对应用软件的支持，因为用户需要使用的不是操作系统，而是运行于操作系统之上的应用软件。</para>
+<para>可以说这两点也是各发行版之间主要的不同。在包管理方面，有dpkg, apt-get组合，有rpm, yum组合，还有pacman, AUR组合，还有emerge, portage组合等等，它们在功能上很多是相似的，都是对程序文件的组织，对依赖关系的处理。但在设计理念和使用方式上，却又有着很大的不同。附录中对Fedora的RPM及YUM工具作了简单介绍，可以作为参考。</para>
+<para>包管理是为支持应用软件而服务的，最终是要提供用户方便的安装和更新软件的方式。所以对于用户来说，选择发行版本，最为重要的是看它对软件的管理方式。当然，在选择时还需要考虑其它一些因素，比如发行版的用户定位，用户群的大小等。下面主要就软件管理机制方面进行讨论，以此选择合适的发行版。</para>
+</sect1>
+<sect1><title>软件管理</title>
+
+<para>软件管理，主要就是将程序文件组织在文件系统中，并对其进行统一管理，方便安装、卸载和升级。对于用户来说，只要需要使用的软件能够装上，能够使用，以后能够升级，对系统以及其它软件没有影响就可以了。但就是这么简单的需求，要实现起来也并不容易。特别是对于Linux来说，而很大一个原因还是因为自由。</para>
+<para>以Windows为例，由于Windows的所有底层接口都由微软一家设计和维护，所以只要微软想让接口保持稳定，可以比较容易实现，甚至在XP和Win7跨度那么大的两个版本，很多二进制程序依然可以同时在两个系统中安装运行。而在Linux中，像操作系统接口、C语言库、X Window、图形控件等等，不同组件由不同组织开发，各自发行版本，再经过发行版选择组装。有些发行版以稳定性为中心，使用较老版本，另一些软件追求更多、更新的功能，使用较新版本。这就导致一个发行版的二进制程序很可能无法在另一个版本中运行。Android就是因为各版本间接口的不稳定而遭至骂声一片。</para>
+<para>这还只是发行版层面的兼容性问题。更为麻烦的是，不同的应用程序开发者，对于基础库选择的趋向也是不同的。比如软件A和B都依赖于基础程序库L，A开发较早，依赖于 α 版本的L库，B依赖于 β 版本。由于程序库从 α 到 β 版本有重大更新，L库的开发者针对 β 版本放弃了向下兼容。那么，如果用户同时需要使用软件A和B，此时应该怎么处理呢？</para>
+<para>Windows的处理方法是，软件A和B都将程序库L包含在自身的目录中，这样就避免了冲突。在Windows下这是可行的，因为绝不部分底层库由微软控制，已经保证了它的兼容性，而其它的一些第三方库只占少数。</para>
+<para>而在Linux中，底层库也存在兼容性问题，而对它的处理就不能像Windows那样让各应用程序自己维护了，而只能是让不同应用程序共享底层程序库。因为底层库被使用的频率太高，很多库的体积又很大，如果各自维护，势必程序体积的增大，这样就会增加磁盘占用，降低程序加载速度，增大内存的使用。所以Linux的处理很可能是放弃软件A，或者等A更新后再加入软件B的支持。对虽然满足了同时需要软件A和B的用户的需求，但却迫使用户对软件进行升级。对于这一点，BSD相对来说好一点，它每一次发布的版本中包含内核以及应用层的一些基础库，这样在一定程度上保证的接口的稳定性。但这并没有包含开发桌面应用所需要的接口，所以对于桌面应用还是不够。</para>
+<para>以上是基础库API及ABI接口层面导致的兼容性问题，从而让用户的应用程序版本选择上失去了一定的自由。而在各一方面，各个发行版自身对于底层接口稳定性的忽视也是导致这一问题的重要原因。</para>
+<para>由于Linux上的应用程序一般为开源程序，可以非常方便的进行重新编译打包，所以二进制包一般由各发行版各自维护，而不是由软件设计者维护。再是在Linux中，大部分包管理工具都包含有网络下载更新功能，可以方便地对整个系统进行更新，这也致使大部分Linux发行版都会对软件包进行频繁更新，比如现在很多的都是六月一个新版本。这在一定程度上给用户造成了困扰。因为升级是需要花费人力成本的，而且还要考虑兼容性问题。并非所有用户都希望使用最新的软件。可能他只是需要对其中一两个应用软件更新，但由于这些应用软件的二进制包由发行版维护，而它们依赖于新的底层库，所以用户必须对整个系统进行更新才能安装使用这些软件的新版本。当然还是可以自行编译代码的，但这对于一个普通桌面用户来说，是要求太高了。给予用户选择是否对软件进行更新的自由，是对稳定性的一个重要保证，但在现有Linux发行版本中，很难找到比较理想的选择。用户只能寄希望于系统的更新不会带来什么麻烦，但这往往是不现实的。</para>
+<para>当然，追求稳定的发行版是有的，比如RHEL, Debian stable等，但它们的稳定策略是针对整体系统而言，并没有对程序库和应用程序作区分，本质上它们是针对于服务器用户的。如果需要在这些系统中使用较新的应用程序也是复杂的。所以个人觉得现在Linux发行版的一个重要问题是，对库程序和应用程序在升级处理上没有做很好的区分。对于一个桌面应用为主的系统来说，库应该是相对稳定的，而应用程序应该是包含多个可用版本，供用户选择，一样可以在一定程度上避免了不同应用程序之间的冲突。</para>
+<para>比较接近这一思路的是MEPIS发行版，它底层基于Debian stable，这样保证了系统接口的相对稳定性，而桌面应用程序版本则比较新。但对于需要较新的应用程序的界定也是困难的，不同的用户会有不同的需求。在满足不同用户需求上，Gentoo更为理想，它给予用户极大的自由，用户可以根据自身需要为不同软件选择不同版本。Gentoo将软件分为稳定(stable)和测试(testing)两个分支，与其它发行版不同的是，由于Gentoo的包管理机制是基于源码的，所以完全可以在stable分支的系统中针对个别软件使用testing分支的版本，这就允许用户在大部分包相对稳定的基础上，依然可以让少部分包保持较新，通过stable分支构建基本系统，而应用程序更为的是使用testing分支。而在二进制发行版本中，往往没有选择应用程序版本的自由。只是对于一个桌面系统来说，Gentoo门槛太高了。</para>
+<para>对于一个系统来说，一个用户的需求是基本确定的，但要满足1万，1百万用户的需求，就不是那么容易了。不同发行版通过事先设想用户的需求来选择软件以及版本，而Gentoo通过给予用户选择的自由，让用户自己来搭建满足自己需求的系统。</para>
+<para>希望在Linux各主要的底层库和桌面应用程序趋于稳定之后，各发行版的区别将逐渐淡化，这样在软件管理方式上也可能出现统一。Linux Standard Base(<link xlink:href="http://www.linuxbase.org"/>)标准正是在尝试对Linux应用的底层库接口制定标准。而PackageKit(<link xlink:href="http://www.packagekit.org/"/>则是希望对各发行版的包管理机制在图形界面上进行统一。</para>
+<para>接下来，进入实战阶段，主要说明Linux发行版的安装以及基础功能配置的问题。</para>
+</sect1>
+<sect1><title>安装</title>
+
+<para>对于一个操作系统的安装，并不需要每个用户都能够掌握，但也不能因此而忽略了它的用户体验，就比如Gentoo，虽然在它的安装过程中给予了用户极大的自由，同时也让用户对于Linux操作系统的组织有了一个较深的认识，但还是会因为没有较为简便的安装方式而将很多用户拒之门外。而相对来说，其它很多发行版，比如Fedora等，由于采用了图形化的安装界面，有较为丰富的提示和说明，减小了初次使用Linux系统的用户的障碍。</para>
+<para>传统上，操作系统一般都是安装在硬盘中，但现在已经出现了越来越多的形式，比如LiveCD，U盘等。对于像网络设备等功能相对固定的系统更多的采用CF卡等只读媒介来存放系统，而对于桌面应用来说，虽然网络操作系统已经出现，将所有数据存储在网络上已经成为可能<footnote><para>Google的Chrome OS就是这样一种尝试，整个操作系统的唯一桌面应用软件就只有浏览器，所有其它应用都用网络服务代替。</para></footnote>，但大多还是以硬盘方式存储。</para>
+<para>虽然不同发行版在安装上有不同处理，但最终完成的任务是相似的：磁盘分区、设置时间时区和语言、拷贝文件、安装系统引导程序、创建用户、系统自启动服务选择、网络设置等。下面对其中一些操作作简要说明，方便用户了解Linux系统的一些基础功能。</para>
+
+<sect2><title>磁盘分区</title>
+
+<para>针对不同的应用，会需要不同的磁盘分区方式，比如服务器可能就需要对日志存放进行单独分区，避免因为日志过大而影响服务的正常运行。而对于桌面应用来说，可能需要将数据文件存放进行单独分区，这样可以方便以后系统升级。</para>
+<para>而分区的策略也会受到文件系统组织的影响。相对于Windows分盘形式来说，Linux系统的整体树型结构更为自由，可以对任何一个结点进行单独分区，不同分区可以针对存放的内容采用不同的文件系统。当然，这些更多的是出于性能上的考虑，而对于桌面应用影响不大。</para>
+<para>在命令行下，分区一般通过<command>fdisk</command>或<command>cfdisk</command>进行，现在也出现了一些图形化的分区工具，比如GParted(<link xlink:href="http://gparted.sourceforge.net/"/>等。</para>
+<para>在分区之后就需要考虑对各分区选择不同的文件系统了。比如传统的ext2, ext3，以及新近的ext4, btrfs等，对于这些文件系统的说明，可以查看这篇文章：<link xlink:href="http://linuxtweaks.wordpress.com/2010/04/23/which-linux-filesystem-to-choose/"/>。</para>
+
+</sect2>
+<sect2><title>创建用户</title>
+
+<para>Linux基于UNIX设计，所以从一开始对多用户就有较好的支持。不过对于桌面系统来说，多用户并非必需，但通过区分超级用户和普通用户，还是可以增强系统的稳定性的。所以在Linux桌面系统中，一般不建议使用root作为日常使用的用户。</para>
+<para>在桌面应用中，用户概念会同时结合用户组概念在文件权限，资源访问权限、操作权限等方面有所体现。比如如果需要使用声卡，则应该将用户加入<literal>audio</literal>组，可以通过<literal>gpasswd -a username audio</literal>命令或者直接修改<literal>/etc/group</literal>文件进行添加。</para>
+<para>通过<literal>useradd -m username</literal>命令可以创建普通用户，<literal>passwd username</literal>可以修改该用户的密码。</para>
+<para>另外，如果觉得每次在需要root权限时都要调用<literal>su</literal>并输密码比较繁锁，可以使用<literal>sudo</literal>命令。先调用<literal>visudo</literal>，在sudo配置文件中添加下面的内容，以后只要在需要管理员权限的命令前加上<literal>sudo</literal>就能以管理员权限运行该命令。<literal>sudo su -</literal>可以不必输入密码以root权限运行SHELL。</para>
+<screen>username    ALL=(ALL)       NOPASSWD: ALL</screen>
+</sect2>
+<sect2><title>系统服务</title>
+
+<para>在Linux系统中，有一个runlevel<footnote><para>关于runlevel的说明，可以查看这里：<link xlink:href="http://en.wikipedia.org/wiki/Runlevel"/></para></footnote>概念，用于指定用户希望以什么形式运行系统，对于桌面应用来说，一般会选择 3 或 5 ，分别指多用户终端环境和多用户桌面环境。而实际两者的区别不大，只是初始启动的服务有所不同。这些都在init系统中指定。对于init系统的维护，不同发行版有不同的工具，Feodra中使用的是<literal>chkconfig</literal>，Gentoo中使用的是<literal>eselect rc</literal>，但最终实现的动作是相似的。关于这一方面的介绍，可以查看wikipedia的说明：<link xlink:href="http://en.wikipedia.org/wiki/Init"/>。</para>
+</sect2>
+<sect2><title>网络</title>
+
+<para>各发行版本在网络启动脚本上的设置都有所不同，但最终调用的命令都是相似的。通过<literal>ifconfig</literal>或者<literal>ip link</literal>命令设置静态网卡地址，而对于DHCP的支持则通过<literal>dhcpcd</literal>命令实现。DNS的设置存放在<literal>/etc/resolv.conf</literal>文件中。<literal>/etc/hosts</literal>文件中存放静态IP与域名绑定。</para>
+</sect2>
+<sect2><title>时间设置</title>
+
+<para>对于时间的调整主要包括时区和时间的设置。时区的配置文件是<literal>/etc/localtime</literal>，从<literal>/usr/share/zoneinfo/</literal>中拷贝相应时区的文件到<literal>/etc/localtime</literal>即可完成对时区的修改。比如中国一般选择<filename>Asia/Shanghai</filename><footnote><para>需要注意的是，在将时区设置为Asia/Shanghai之后，date命令在输出时区时会显示<literal>CST</literal>，而CST有两种含义，分别是Central Standard Time和China Standard Time。通过<command>date +%z</command>则可以看到数值表示的时区。具体关于时区的缩写可以到这里查看：<link xlink:href="http://en.wikipedia.org/wiki/List_of_time_zone_abbreviations"/>。</para></footnote>。</para>
+<para>设置系统时间可以通过<literal>date</literal>命令完成，格式为：<literal>date MMDDhhmmCCYY</literal>。M为月，D为日，h为时，m为分，CCYY为年。当然也可以使用ntp进行同步。</para>
+<para>通过<literal>date</literal>命令设置的其实是系统的时间，并没有同步到物理时钟，通过<literal>hwclock --systohc</literal>进行同步，但各发行版一般都会在系统关机脚本中加入物理时钟自动同步功能。</para>
+<para>Windows默认物理时钟为本地时间，如果是多系统启动，那么可以在Linux中也设置为默认本地时间。只需要在运行<command>hwclock --systohc</command>命令时加入<literal>--localtime</literal>参数即可。</para>
+</sect2>
+</sect1>
+<sect1><title>优化配置</title>
+
+<para>以下再罗列一些对系统的配置和优化，供读者参考。</para>
+<sect2><title>系统启动</title>
+
+<para>对于系统启动速度的优化，主要需要从两方面着手。一是内核定制，删去不必要的驱动，将必需的驱动直接整合到内核文件而不是以模块方式编译。再是调整系统启动服务，删去不必要的服务。</para>
+</sect2>
+<sect2><title>虚拟磁盘</title>
+
+<para>对于现在的计算机来说，磁盘IO依然是一个很大的瓶颈 <footnote><para>希望固态硬盘(SSD)的普及可以对这一现状有所改观。</para></footnote>，所以对一些频繁读写而又不需要保存的文件，如果将它们转移到内存中，应该可以极大地提高系统性能。以下就是对<literal>/tmp</literal>目录以及Firefox的cache目录进行的处理。</para>
+<variablelist>
+<varlistentry>
+<term>
+<literal>/tmp/</literal>目录
+</term>
+<listitem>
+<para>
+在<literal>/etc/fstab</literal>中添加<literal>tmpfs /tmp tmpfs size=300m 0 0</literal>，可以将<literal>/tmp/</literal>目录挂载为tmpfs文件系统，也就是使用内存存储文件。其中size是可选的，表示最大限值。
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+Firefox Cache
+</term>
+<listitem>
+
+<para>
+挂载Firefox缓存到共享内存目录<footnote><para>这一优化对Firefox的响应速度会有较大提升，在 <link xlink:href="http://wiki.archlinux.org/index.php/Speed-up_Firefox_using_tmpfs">http://wiki.archlinux.org/index.php/Speed-up_Firefox_using_tmpfs</link> 中有详细的介绍。</para></footnote>。方法是在<literal>about:config</literal>配置页面添加<literal>browser.cache.disk.parent_directory</literal>参数，值设置为<literal>/dev/shm/firefox-cache</literal>。
+</para>
+
+<para>注意系统需要启用<filename>/dev/shm</filename>，可以查看在<filename>/etc/fstab</filename>中是否包含：<literal>none /dev/shm tmpfs defaults 0 0</literal>。</para>
+
+</listitem>
+</varlistentry>
+</variablelist>
+</sect2>
+</sect1>
+</chapter>

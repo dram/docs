@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<chapter
+  xmlns="http://docbook.org/ns/docbook"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>网络</title>
+
+<para>从最开始的静态网页、电子邮件以及Telnet BBS，到现在的博客、网上购物、社交、微博，网络的发展不可谓不快。网络的发展，不仅仅技术的革新，更是在技术应用上的发展，而这些都切切实实地改变着我们的生活。</para>
+<para>网络给我们带来了更为迅速的信息传播，更为便捷的通信方式。但网络也必有其弊端，那么我们又该警惕什么呢？比如信息爆炸，比如永久在线，还有更多层出不穷地网络新概念，这些都是值得我们思考的。网络已经不仅仅是一个技术问题，它更是一个社会问题。</para>
+<para>下面简单介绍Linux中的浏览器以及通信工具。</para>
+<sect1><title>浏览器</title>
+
+<para>现在占主导地位的浏览器主要有Mozilla的Firefox，Google的Chrome，Apple的Safari以及Microsoft的IE。作为网络的重要入口，各浏览器之间的竞争自然也是热闹非凡。也可以从浏览器之间的比较中看出对于一个软件来说什么是最为重要的。</para>
+
+<para>对于浏览器来说，非常关键的几个参数是：</para>
+
+<variablelist>
+<varlistentry><term>稳定性</term>
+<listitem><para>稳定性是对于绝大部分软件的基本要求，而对于浏览器来说也非常重要，因为WEB中存在大量不符合标准的网站，浏览器必须能保证不会因为这些网站而导致自身崩溃。</para></listitem>
+</varlistentry>
+<varlistentry><term>兼容性</term>
+<listitem><para>由于WEB标准的滞后，以及不同浏览器这间的兼容性问题，一个网站在设计时很可能只考虑在某一个或几个特定的浏览器中正常使用。而浏览器的设计应该在保证遵循标准的同时，尽可能地与其它浏览器保持兼容，从而减轻网页开发者和使用者的负担。</para></listitem>
+</varlistentry>
+<varlistentry><term>安全性</term>
+<listitem><para>WEB应用的安全主要需要从两方面考虑，一是同站自身的安全，再是浏览器的安全。</para></listitem>
+</varlistentry>
+<varlistentry><term>性能</term>
+<listitem><para>由于现在的网络应用越来越复杂，对于网络性能上的要求也就越来越高。网络整体的性能受多方面的影响，比较网络带宽，网络接口，协议设计以及实现等。而浏览器也是非常重要的一环，比如渲染引擎的性能，包括对HTML, CSS, Javascript等的解析，再比如缓存机制、预加载等。</para></listitem>
+</varlistentry>
+<varlistentry><term>功能</term>
+<listitem><para>而在功能性上，由于不同用户对于WEB应用有着全然不同的需求，要同时满足这些用户，需要有一个方便的扩展接口。</para></listitem>
+</varlistentry>
+</variablelist>
+
+<para>这里选择使用Firefox，主要是因为它较为丰富的插件，以及它较大的市场占有率。下面对Firefox做一些简单的介绍。</para>
+
+<sect2><title>插件</title>
+<para>下面例举一些在Firefox中常用的插件：</para>
+<variablelist>
+  <varlistentry><term>Adblock Plus</term>
+    <listitem><para>屏蔽广告。可以定阅不断更新的URL列表，能够屏蔽大部分中英文广告。</para></listitem>
+  </varlistentry>
+  <varlistentry><term>DownThemAll!</term>
+    <listitem><para>多线程下载工具。</para></listitem>
+  </varlistentry>
+  <varlistentry><term>Flashblock</term>
+    <listitem><para>屏蔽页面中所有的Flash。Flash对浏览器整体的性能有较大影响，使用Flashblock插件可以让页面中的所有Flash默认不显示，如有需要显示的可以手动开启。</para></listitem>
+  </varlistentry>
+  <varlistentry><term>Gmail Watcher</term>
+    <listitem><para>Gmail邮件提醒。于Gmail邮件提醒相关的Firefox插件有很多，但总体来说Gmail Watcher最为完善。</para></listitem>
+  </varlistentry>
+  <varlistentry><term>Stylish</term>
+    <listitem><para>可以对Firefox进行一些定制，从<link xlink:href="http://userstyles.org"/>可以下载很多。比如<link xlink:href="http://userstyles.org/styles/2433"/>定制了<code>about:blank</code>页面。</para></listitem>
+  </varlistentry>
+</variablelist>
+</sect2>
+<sect2><title>其它</title>
+<para>下面再来介绍一些Firefox的快捷键。如果需要完全使用键盘控制Firefox，可以考虑使用vimperator插件，具体可以看这里：http://vimperator.org/。</para>
+<variablelist>
+  <varlistentry><term>Ctrl+L</term>
+    <listitem><para>转到地址栏</para></listitem>
+  </varlistentry>
+  <varlistentry><term>Ctrl+K</term>
+    <listitem><para>搜索栏</para></listitem>
+  </varlistentry>
+  <varlistentry><term>Ctrl+Tab</term>
+    <listitem><para>标签页切换</para></listitem>
+  </varlistentry>
+  <varlistentry><term>Ctrl+T</term>
+    <listitem><para>新建标签页</para></listitem>
+  </varlistentry>
+  <varlistentry><term>Ctrl+W</term>
+    <listitem><para>关闭标签页</para></listitem>
+  </varlistentry>
+  <varlistentry><term>Ctrl+R，F5</term>
+    <listitem><para>刷新页面，另外Ctrl+F5可以让浏览器忽略自身缓存</para></listitem>
+  </varlistentry>
+  <varlistentry><term>Alt+Left Alt+Right</term>
+    <listitem><para>后退、前进</para></listitem>
+  </varlistentry>
+  <varlistentry><term>Ctrl+左键</term>
+    <listitem><para>在新标签页打开键接</para></listitem>
+  </varlistentry>
+</variablelist>
+</sect2>
+</sect1>
+<sect1><title>通信工具</title>
+
+<para>PC的通信工具基本上有Email、IRC、即时通信工具等。Linux中有相应工具对其支持。比如Pidgin、Thunderbird等。由于使用方法比较直观，这里不再做介绍。</para>
+<para>这些技术虽然给我们带来了便捷，但同时带来了一些问题，比如安全问题、隐私问题、真实性问题等等。</para>
+</sect1>
+</chapter>

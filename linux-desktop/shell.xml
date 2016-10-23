@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<chapter
+  xmlns="http://docbook.org/ns/docbook"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>SHELL</title>
+
+<para>本章主要来讲讲SHELL，对桌面用户来说，理想情况下并不需要了解SHELL，但了解SHELL有助于了解Linux的运作机制。同时有些与操作系统直接相关的操作也需要通过SHELL来执行。</para>
+<para>接下来对SHELL作一些零散的介绍。</para>
+<sect1><title>SHELL实现</title>
+
+<para>Linux中有很多的SHELL实现，其中主要包括sh及csh两个分支。在Linux中比较普及的是bash。这里选择使用mksh，相对于bash来说，它更为轻量级，也更接近于POSIX标准。如果喜欢功能强大的SHELL，也可以考虑zsh。</para>
+<para>通过<literal>chsh</literal>命令可以更换shell。</para>
+<para>关于它的配置，可以参考这里：<link xlink:href="https://github.com/dram/configs/blob/master/.mkshrc"/>。</para>
+<para>这里在设置<literal>PATH</literal>时，将<literal>$HOME/bin/</literal>目录置于系统的命令路径之前，这样可以方便地对系统原有程序进行覆盖。通过<literal>which</literal>命令可以确认当前调用的是哪一个命令。</para>
+</sect1>
+<sect1><title>常用命令</title>
+
+<para>对于桌面应用来说，有几个常用命令需要掌握：top, ps, kill。在GNOME或者KDE环境下也有对应的图形化工具。</para>
+</sect1>
+</chapter>

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<chapter
+  xmlns="http://docbook.org/ns/docbook"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>桌面环境</title>
+
+<para>桌面环境是桌面应用中不可或缺的一部分。按功能划分，主要包括：窗口管理器(window manager)、任务栏(taskbar)、系统托盘(system tray)、桌面(desktop)等。</para>
+<para>Linux下可以直接使用GNOME, KDE或XFCE等系统直接得到桌面环境的所有功能。而另一种方式是分别对各个组件进行选择，拼装成满足自身需求的桌面环境，这是KISS设计哲学很好的体现。其实对于GNOME, KDE和XFCE来说，它们对于这些功能也是通过不同程序实现的，只是这些程序的界面和操作的一致性较高，耦合性较大。</para>
+<para>这些不同功能的程序能够很好的协调工作，主要得益于X Window标准化的接口。比如EWMH <footnote><para>EWMH标准由X Desktop Group制定，详细信息可以查看：http://standards.freedesktop.org/wm-spec/wm-spec-latest.html。</para></footnote>标准规定了窗口管理器的一些接口，这样不同窗口管理器虽然可能有全然不同的窗口组织策略，但处理机制是相同的，这就允许其它程序独立于窗口管理器直接对窗口进行处理。其它标准还有System Tray Protocol Specification, XEmbed Protocol Specification等等，可以在http://standards.freedesktop.org/查看更多的Linux下桌面应用相关标准。</para>
+<para>下面主要介绍如何通过整合Openbox, tint2, xchainkeys等程序搭建一个轻量级的桌面环境。相关的配置文件和脚本先在这里列出，读者可以作为参考：</para>
+<variablelist xml:id="wm-config-files">
+<varlistentry><term>X Window启动脚本</term>
+<listitem><para><link xlink:href="https://github.com/dram/configs/blob/master/.xinitrc"/></para></listitem>
+</varlistentry>
+<varlistentry><term>Openbox启动脚本</term>
+<listitem><para><link xlink:href="https://github.com/dram/configs/blob/master/.config/openbox/autostart.sh"/></para></listitem>
+</varlistentry>
+<varlistentry><term>Openbox样式</term>
+<listitem><para><link xlink:href="https://github.com/dram/configs/tree/master/.themes"/></para></listitem>
+</varlistentry>
+<varlistentry><term>xchainkeys快捷键配置</term>
+<listitem><para><link xlink:href="https://github.com/dram/configs/blob/master/.config/xchainkeys/xchainkeys.conf"/></para></listitem>
+</varlistentry>
+<varlistentry><term>窗口控制辅助脚本</term>
+<listitem><para><link xlink:href="https://github.com/dram/configs/blob/master/bin/wm-assist.py"/></para></listitem>
+</varlistentry>
+<varlistentry><term>tint2任务栏程序配置</term>
+<listitem><para><link xlink:href="https://github.com/dram/configs/blob/master/.config/tint2/tint2rc"/></para></listitem>
+</varlistentry>
+<varlistentry><term>fontconfig配置</term>
+<listitem><para><link xlink:href="https://github.com/dram/configs/blob/master/.fonts.conf"/></para></listitem>
+</varlistentry>
+</variablelist>
+<sect1><title>窗口管理器</title>
+
+<para>窗口管理器的主要作用是管理窗口的摆放，显示标题栏以及对窗口边框的修饰，还有对常用窗口操作的支持，如：最大化、最小化、窗口移动、改变窗口大小等。另外为方便键盘操作，窗口管理器一般还会提供快捷键设置的功能。</para>
+<para>关于窗口的放置策略，有两种比较流行的方式，一种是层叠，另一种是平铺<footnote><para>相对来说，层叠的放置策略比较常见，对于平铺窗口放罟策略的介绍，可以查看： <link xlink:href="http://en.wikipedia.org/wiki/Tiling_window_manager"></link>。</para></footnote>。平铺可能对于大屏幕比较合适，这里还是选择传统的层叠式的窗口管理器。</para>
+<para>另外还需要考虑窗口操作驱动方式的问题，可选的是计算机主要的两个输入接口：键盘和鼠标。两种方式各有利弊，鼠标操作非常直观，但双手更多的是停放在键盘上，这样会导致手在鼠标和键盘间频繁切换；而使用键盘控制窗口虽然比较快捷，但需要有一个适应的过程，需要在一段时间之后，才能将按键序列变成下意识的动作。这里主要是以介绍键盘操作为主。</para>
+<para>对于用户来说，由于会对窗口进行大量的操作，所以窗口管理器的行为必须是直观的，同时为适应不同用户的需求，需要具备一定的可定制性。这里选择使用Openbox，它对于上述功能有比较好的支持，同时本身体积比较小巧，适合与其它程序整合使用。</para>
+<para>Openbox配置文件是XML格式，可以直接修改，也可以使用图形化配置工具obconf修改配置，文件为<literal>$HOME/.config/openbox/rc.xml</literal>。下面主要来介绍与窗口管理器相关的一些配置。</para>
+<sect2><title>虚拟桌面</title>
+
+<para>关于虚拟桌面的概念，详细的可以查看：<link xlink:href="http://en.wikipedia.org/wiki/Virtual_desktop"/>。简单说来就是可以将开启的窗口分发到不同桌面从而更便于管理。</para>
+<para>在Openbox中可以通过<literal>Ctrl+Alt+方向键</literal>或者<literal>Alt+鼠标滚轮</literal>进行虚拟桌面切换。移动窗口到桌面边缘可以将窗口移入另一个桌面，<literal>Shift+Alt+方向键</literal>也能完成同样的功能。</para>
+</sect2>
+<sect2><title>快捷键</title>
+
+<para>上面已经提及，这里希望尽可能使用键盘完成常用的窗口操作以及其它一些桌面应用功能，虽然Openbox自带有快捷键设置功能，但并不支持chained key bindings功能<footnote><para>chained key bindings是指可以将多个键盘点击动作做为一个事作，将动作绑定到这一按键序列中，这样可以方便的快捷键进行分类设置，同时有效避免了因为首字母相同而引起的冲突。更为详细的说明可以查看xchainkeys的项目网站： <link xlink:href="http://code.google.com/p/xchainkeys/"/>。</para></footnote>，所以这里使用xchainkeys程序完成主要功能的快捷键设置，而对于一些只能由Openbox提供的功能，则依然使用Openbox的快捷键设置。</para>
+<para>关于xchainkeys的使用，可以参考这里的<link linkend="wm-config-files">配置</link>。在配置中可能需要用到各个键盘按键的键名，可以通过下面的命令查看：</para>
+<screen>xev | grep keycode</screen>
+<para>另外，如果需要对特定按键进行交换或设置，可以使用xmodmap命令。比如下面的命令将替换菜单键为Win键，其中<literal>135</literal>是菜单键的keycode，不同键盘可能不同，具体可以通过上面的<command>xev</command>命令查看。</para>
+<screen>xmodmap -e "keycode 135 = Super_R"</screen>
+</sect2>
+<sect2><title>窗口操作</title>
+
+<para>虽然Openbox自身已经支持大量的窗口操作，并可以将这些动作设置为相应快捷键或鼠标动作。但其扩展性不好，不能支持一些更为复杂的窗口动作。所以这里基于EWMH标准编写了一个脚本程序对窗口进行控制，再利用xchainkeys捕捉键盘事件绑定到相应动作。通过外部脚本控制的另一个好处是，该脚本不受Openbox限制，也可以在其它窗口管理器中使用。完整的脚本可以查看： <link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://github.com/dram/configs/blob/master/bin/wm-assist.py">https://github.com/dram/configs/blob/master/bin/wm-assist.py</link>。</para>
+<para><literal>wm-assist.py</literal>脚本基于python-xlib实现，参考了wmctrl程序，其中除了实现基本的窗口操作外，还实现了其它一些功能，会在后面再作介绍。该脚本是一daemon程序，通过pipe接口接受外部命令，在xchainkeys的<link linkend="wm-config-files">配置文件</link>中可以查看到具体的命令格式。以下对在<command>wm-assist.py</command>中与窗口操作相关的几个动作加以说明：</para>
+<variablelist>
+  <varlistentry><term><literal>MOVE</literal></term>
+    <listitem><para>相对于当前位置对窗口进行移动。</para></listitem>
+  </varlistentry>
+  <varlistentry><term><literal>RESIZE</literal></term>
+    <listitem><para>改变当前窗口大小。</para></listitem>
+  </varlistentry>
+  <varlistentry><term><literal>CENTER</literal></term>
+    <listitem><para>将当前窗口移至屏幕正中。</para></listitem>
+  </varlistentry>
+  <varlistentry><term><literal>CLOSE</literal></term>
+    <listitem><para>关闭当前窗口。</para></listitem>
+  </varlistentry>
+  <varlistentry><term><literal>MAXIMIZE</literal></term>
+    <listitem><para>最大化当前窗口。</para></listitem>
+  </varlistentry>
+  <varlistentry><term><literal>JOE</literal></term>
+    <listitem><para>提升指定窗口或启用程序，关于这个动作的详细说明将在“程序启动”一节再作介绍。</para></listitem>
+  </varlistentry>
+  <varlistentry><term><literal>ALL</literal></term>
+    <listitem><para>将浏览器、终端、编辑器依次排列，再次调用会将这些窗口恢复回原先的位置，主要是在需要同时查看多个窗口内容时使用。</para></listitem>
+  </varlistentry>
+</variablelist>
+<para>另外，虽然这里以键盘操作为主，但对于一些操作来说，鼠标可能更为方便，下面再介绍几个键盘与鼠标相结合的快捷操作方式：</para>
+<variablelist>
+  <varlistentry><term><literal>Alt + 左键拖动</literal></term>
+    <listitem><para>移动窗口。</para></listitem>
+  </varlistentry>
+  <varlistentry><term><literal>Alt + 右键拖动</literal></term>
+    <listitem><para>更改窗口大小。</para></listitem>
+  </varlistentry>
+  <varlistentry><term><literal>Alt + 滚轮</literal></term>
+    <listitem><para>切换虚拟桌面，这个前面已经提到。</para></listitem>
+  </varlistentry>
+</variablelist>
+</sect2>
+<sect2><title>样式</title>
+
+<para>大多数窗口管理器在处理窗口的修饰时，为了方便用户自定义，都采用样式的形式处理，在 <link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://box-look.org">http://box-look.org</link> 中可以找到大量的Openbox的样式。Openbox样式是一个文本描述文件，可以很方便地进行调整。这里使用的样式是基于Moka和1977 Openbox这两个样式调整的。</para>
+<para>Openbox样式只是对窗口修饰的调整，程序自身的样式并没有改变。如果是GTK程序，可以通过<literal>gtk-chtheme</literal>程序进行调整。<literal>gtk2-engines</literal>软件包中包含很多GTK样式，更多样式可以在 <link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://gnome-look.org">http://gnome-look.org</link> 中找到。</para>
+</sect2>
+</sect1>
+<sect1><title>桌面</title>
+
+<para>在Windows中，桌面往往会放置常用程序的快捷方式以及最近需要访问的文件，而Linux的桌面环境常常会看到只显示一张背景图片，或者显示一些系统当前的资源占用状态。而且，多数窗口管理器都不带有桌面背景设置功能，需要借由其它程序实现。</para>
+<para>Openbox也不例外，这里通过<literal>feh</literal><indexterm><primary>feh</primary></indexterm>命令对桌面背景进行设置。利用feh的<literal>--bg-tile</literal>,<literal>--bg-center</literal>,<literal>--bg-scale</literal>或<literal>--bg-seamless</literal>参数设置背景之后，feh会生成<literal>$HOME/.fehbg</literal>文件，下次如果需要设置同样的背景，只需要运行<literal>source $HOME/.fehbg</literal>即可，随后将看到，可以把这一命令放入Openbox自启动程序脚本中，从而在每次启动X Window时对桌面背景进行自动设置。</para>
+<para>这里没有在桌面添加常用程序的快捷启动，而是通过其它形式加以代替，将在下面介绍。</para>
+</sect1>
+<sect1><title>程序启动</title>
+
+<sect2><title>手工启动</title>
+
+<para>对于安装在系统中的程序，需要有一个入口可以让用户启动这些程序，在Windows中一般是使用开始菜单或者桌面的快捷方式。菜单是比较详细的罗列，而桌面快捷方式则是便于启动常用的程序。</para>
+<para>下面简要说明这里在处理程序启动问题时使用的几种方式。</para>
+<para>首先是采用快捷键的方式，上面已经提到了xchainkeys工具，可以通过它来设置快捷键来直接启动相应程序。另外，在<literal>wm-assist.py</literal>还实现了<literal>jump-or-exec</literal>功能<footnote><para>jump-or-exec功能最初源自于Sawfish的jump-or-exec插件，相对于传统的Alt-Tab来说，这个功能更加方便，更为详细的介绍可以查看pluskid关于它的说明： <link xlink:href="http://lifegoo.pluskid.org/wiki/JumpOrExec.html"/>。</para></footnote>，该功能可以在指定程序没有启动时启动该程序，而在程序已经被开启时将该程序窗口提到最上层。</para>
+<para>再一种方式是使用“运行”窗口，类似于Windows中按下Win+R键所弹出的窗口，在Linux中对应的程序是gmrun，它可以利用Tab键对命令进行补全。另外也可以使用跨平台工具Launchy，可以获得同样的功能。</para>
+<para>最后再来介绍菜单方式，与配置文件一样，Openbox的菜单也是XML格式的，可以直接编辑，也可以通过menumaker程序自动生成，menumaker会自动检测当前系统所安装的程序，比如它会对<literal>/usr/share/applications</literal>目录下的<literal>.desktop</literal><footnote><para>desktop文件内容格式遵循Desktop Entry Specification标准，该标准的内容可以查看： <link xlink:href="http://standards.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html"/>。</para></footnote>文件进行分析。</para>
+</sect2>
+<sect2><title>自启动</title>
+
+<para>对于Openbox来说，有两处地方可以设置在启动X Window时需要自启动的程序。分别是自身的<literal>$HOME/.config/openbox/autostart.sh</literal>和<literal>/etc/xdg/openbox/autostart.sh</literal>这两个脚本，以及XDG标准规定的<literal>~/.config/autostart/</literal>和<literal>/etc/xdg/autostart/</literal>目录。</para>
+<para>HOME目录中的<literal>autostart.sh</literal>优先级高于<literal>/etc/xdg/openbox/autostart.sh</literal>。<literal>$HOME/.config/autostart</literal>目录下的文件优先级高于<literal>/etc/xdg/autostart/</literal>下的同名文件 。</para>
+<para>XDG标准的规定并不是强制性的，可以由窗口管理器决定是否需要运行该目录下的程序。在Openbox中是在<literal>autostart.sh</literal>脚本中进行的处理。</para>
+<para>更为详细的说明可以查看<link xlink:href="http://openbox.org/wiki/Help:Autostart"/>还有<link xlink:href="http://specifications.freedesktop.org/autostart-spec/autostart-spec-latest.html"/>。</para>
+</sect2>
+</sect1>
+<sect1><title>任务栏</title>
+
+<para>与Windows一样，Linux中的任务栏程序一般会实现两个功能：提供窗口列表的显示和切换，以及systray显示功能。</para>
+<para>Linux中可供选择的任务栏程序非常多，这里选择使用tint2，它包含了上述两项功能，相关设置可以参考这里的<link linkend="wm-config-files">配置文件</link> 。另外，如果需要单独的systray功能，可以使用stalonetray程序。</para>
+</sect1>
+<sect1><title>其它设置</title>
+
+<sect2><title>复制粘贴</title>
+
+<para>在X11窗口系统中，一般有两种复制粘贴方式，一种与Windows相似，通过各个程序菜单中的复制粘贴项或是使用与其相关连的快捷键。而另一种方式是通过鼠标选中文本进行复制，再利用鼠标中键或者SHIFT+INSERT进行粘贴。</para>
+<para>第二种方式SELECTION方式，需要注意的是，鼠标的点击动作会清空SELECTION，所以如果希望将一个窗口的内容复制到另一窗口，必须保证在选中文本之后不能再点击鼠标左键。</para>
+<para>但两种方式是不能互操作的，比如使用“复制”菜单项进行复制的内容不能通过鼠标中键进行粘贴。可以通过autocutsel工具对它们进行同步，将下面程序加入到自启动脚本中即可：</para>
+<screen>autocutsel &amp;
+autocutsel -selection PRIMARY &amp;</screen>
+</sect2>
+<sect2><title>字体</title>
+
+<para>X Window的字体主要是通过libXft处理，而它又基于fontconfig和freetype，fontconfig可以在<literal>$HOME/.fonts.conf</literal>文件中对其进行配置，比如字体选择、AA开关等。对于libXft可以在<literal>$HOME/.Xdefaults</literal>进行配置，示例如下：</para>
+<screen>Xft.dpi:       96
+Xft.antialias: true
+Xft.rgba:      rgb
+Xft.hinting:   true
+Xft.hintstyle: hintslight
+Xft.lcdfilter: lcddefault</screen>
+<para>现在大部分GTK程序都使用cairo渲染字体，cairo在1.10.0版本之后，加入了对lcdfilter的支持，这样在使用LCD显示屏时开启lcdfilter可以得到更为理想的字体显示效果。</para>
+<para>以上只是对字体渲染的设置，对于中文用户来说，还需要进行默认中文字体的设置，这个设置由fontconfig处理，在<literal>$HOME/.fonts.conf</literal>配置文件中。可以在该文件中对sans, serif, monospace设置默认中文字体，详细方式参考<link linkend="wm-config-files">配置文件</link> 。</para>
+<para>关于fontconfig配置的更多细节，可以查看官方文档： <link xlink:href="http://www.freedesktop.org/software/fontconfig/fontconfig-user.html"/>，也可以查看ArchWiki里的相关说明： <link xlink:href="https://wiki.archlinux.org/index.php/Font_Configuration"/>。</para>
+</sect2>
+</sect1>
+</chapter>

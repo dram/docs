@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<chapter
+  xmlns="http://docbook.org/ns/docbook"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>资源管理</title>
+
+<para>计算机通过文件系统组织和管理资源，可以把文件系统理解为一个抽屉，而其中存放着许多的文件夹或文件，而在文件夹里可以再存放文件或文件夹。只不过计算机中的文件夹与现实的一点不同是它可以无限制的嵌套。</para>
+<para>而对于用户来说，作为一个资源管理工具，必须要提供的基本操作包括：打开文件、移动、重命名、删除文件等。而进行这些操作的一个前提是可以快捷地定位文件。</para>
+<para>在Linux中，由于命令行程序的广泛使用，资源管理工具并不是必需的，所有相关功能都可以在命令行下完成。但对于普通的桌面用户来说，增加了不必要的学习负担，所以这里介绍使用lfm<footnote><para>lfm是Last File Manager的缩写，详细信息可以查看官方网站：<link xlink:href="http://www.terra.es/personal7/inigoserna/lfm/"/>。</para></footnote>来进行资源管理。</para>
+<para>lfm本身是一个字符界面的程序，但这并不影响它在桌面环境下的使用<footnote><para>在Windows中，字符界面的程序几乎不再使用，而Linux中则依然有大量的使用，不仅仅是一些开发时间较早的程序，就是一些新近设计开发的程序而有一些选择使用字符界面，这可以是出于程序的稳健以及开发维护复杂度的考虑。</para></footnote>。比如通过下面的命令可以利用sakura虚拟终端打开lfm，再将该命令利用上面介绍的<command>xchainkeys</command>工具定制快捷键，就可以用类似Windows中的Win+E的方式对系统资源进行管理。</para>
+<screen>sakura --title 'File Manager' -e lfm</screen>
+<para>另外，除了的对普通文件进行管理外，像多媒体文件，比如音频文件，现在很多音频播放器都提供媒体库功能，可以通过它们实现对音频文件的分类管理。</para>
+<para>接下来先简单介绍lfm的使用，再来讨论与资源管理相关的其它一些话题。</para>
+
+<sect1><title>lfm介绍</title>
+<sect2><title>文件定位</title>
+<para>要实现文件的快速定位，需要从以下几个方面考虑：</para>
+<variablelist>
+<varlistentry><term><literal>方便的目录切换</literal></term>
+<listitem><para>lfm中有多种方式进行目录切换，通过<literal>g</literal>键可以直接输入想要打开的目录。也可以在列表中通过左右方向键进行上下层目录的切换。</para></listitem>
+</varlistentry>
+<varlistentry><term><literal>文件搜索</literal></term>
+<listitem><para>对于文件的搜索，lfm中可以通过<literal>Ctrl+S</literal>在当前列表中搜索。也可以通过<literal>/</literal>命令在当前目录下进行递归搜索。</para></listitem>
+</varlistentry>
+<varlistentry><term><literal>排序</literal></term>
+<listitem><para>lfm的<literal>s</literal>命令可以对文件进行各种方式的排序。由于系统为UTF-8编码环境，中文无法以拼音字母顺序进行排列。</para></listitem>
+</varlistentry>
+<varlistentry><term><literal>文件名定位</literal></term>
+<listitem><para>在Windows的资源管理器中，可以通过文件名的首字母对文件进行快速定位。而在lfm中可以通过<literal>Ctrl+S</literal>搜索命令取代，与排序同样的一个问题是，对中文文件的定位并不方便，因为需要输入中文。</para></listitem>
+</varlistentry>
+<varlistentry><term><literal>快捷方式</literal></term>
+<listitem><para>Windows的快捷方式对应于Linux的符号链接，lfm中可以通过<literal>l</literal>命令创建。</para></listitem>
+</varlistentry>
+</variablelist>
+</sect2>
+<sect2><title>打开文件</title>
+
+<para>对于打开文件的操作，主要是需要对不同的文件类型进行判断。在lfm中，需要通过配置文件进行指定。配置文件存放在<literal>$HOME/.lfmrc</literal>，通过<code>[Programs]</code>和<code>[File types]</code>这两段配置可以指定，例如以下配置指定使用acroread打开pdf文件。</para>
+<screen>[Programs]
+...
+pdf: acroread
+...
+
+[File Types]
+...
+pdf: pdf
+...</screen>
+<para>另外lfm可以通过F3查看文件，通过F4编辑文件。编辑和查看所使用的程序可以在<code>[Programs]</code>中的<code>editor</code>和<code>pager</code>指定。</para>
+<para>更多类型的设置可以参考这里的配置：<link xlink:href="https://github.com/dram/configs/tree/master/.lfmrc"/>。</para>
+</sect2>
+<sect2><title>其它操作</title>
+
+<para>在lfm中，删除使用<literal>F8</literal>，重命名使用<literal>F2</literal>，复制使用<literal>F5</literal>，移动使用<literal>F6</literal>。</para>
+<para>通过<literal>INSERT</literal>可以同时选中多个文件进行批量操作。</para>
+<para>lfm还有其它很多实用的功能，具体可以查看<link xlink:href="http://www.terra.es/personal7/inigoserna/lfm/#keys"/>。</para>
+</sect2>
+<sect2><title>lfm的不足</title>
+<para>总的来说，lfm作为文件管理工具，基本功能已经比较完善，主要的不足有：</para>
+<orderedlist>
+<listitem><para>对中文的支持并不理想；</para></listitem>
+<listitem><para>按键上没有vifm方便；</para></listitem>
+<listitem><para>没有Trash(回收站)功能；</para></listitem>
+<listitem><para>没有整合<command>locate</command>工具。</para></listitem>
+</orderedlist>
+</sect2>
+
+</sect1>
+<sect1><title>文件权限</title>
+
+<para>Linux从最初就是作为多用户操作系统进行设计，所以它的文件权限管理非常完备。Linux中每一个文件或文件夹都可以对三类用户分别设置权限：文件拥有者、文件所属用户组以及其它用户。每类用户都可以有读、写、执行三类权限。可以通过umask命令对创建文件时的默认权限进行设置。</para>
+
+<para>但对于普通桌面用户来说，一般为个人使用，所以不需要特别关心。</para>
+</sect1>
+<sect1><title>数据备份</title>
+
+<para>在计算机中，数据对于用户来说往往是最为重要的。所以对于重要数据必须进行必要的备份。可以考虑像Dropbox这类网络硬盘方式，它对Linux也有较好的支持。如果文件不大，也可以考虑使用邮箱进行数据备份，利用cron定时将数据打包以附件形式发送给邮箱。</para>
+<para>而对于一些不涉及版权问题并希望与其他人分享的数据，也可以在github, googlecode等免费代码管理服务中进行备份。下面就以本文涉及到的配罟文件为例，说明基本的使用方式。</para>
+<sect2 xml:id="manage-configs"><title>配置文件管理</title>
+
+<para>Linux程序和Windows程序在设计理念上的一个重要不同是，Linux程序大量采用可以直接编辑的文本配置文件。其中的一个好处是，可以通过版本控制程序来管理这些配置文件。</para>
+<para>配置文件经由版本控制管理后，可以追溯以前的修改，同时如果将其放在网络上的公共版本管理服务中，还可以与其他用户分享。</para>
+<para>版本管理工具有很多，比如Subversion, Git, Mercurial等，下面主要介绍如何通过git工具下载本文中的配置。关于git的基本使用方法介绍，可以从这里查看：<link xlink:href="http://www.kernel.org/pub/software/scm/git/docs/gittutorial.html"/>。</para>
+<para>通过以下命令，可以下载本文涉及的所有配置文件：</para>
+<screen>git clone git://github.com/dram/configs.git</screen>
+<para>但使用上面的命令下载的配置文件并没有直接存放到<literal>HOME</literal>目录中。可以通过在<literal>HOME</literal>目录执行下面的命令，将这些文件导入到HOME目录：</para>
+<screen>git init
+git remote add github git://github.com/dram/configs.git
+git fetch github
+git checkout master</screen>
+</sect2>
+</sect1>
+</chapter>

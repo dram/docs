@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<chapter
+  xmlns="http://docbook.org/ns/docbook"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>输入法</title>
+
+<para>在PC中输入文字，一般有这样几种方式：键盘输入、手写识别和语音识别。而现在主要的输入方式还是依靠键盘完成。</para>
+<para>对于英文，所有单词都是由26个字母组成，所以可以通过键盘直接输入需要的单词。而对于中文来说，由于字符太多，不可能将每一个汉字与键盘上的按键一一对应，所以只能通过将键盘上的几个字母的组合对应为一个汉字或词组，以此实现中文的输入，对于这一对应关系的处理就是输入法的主要功能之一。</para>
+<para>输入法是非常重要的基础性应用程序，所以不管在Windows还是Linux下，都已经有比较完善的支持。在这里，为了让输入法与之后将要介绍的Vim编辑器较好的协同工作，选用了uim这一输入法框架，并在它原有郑码输入法的基础上对其加以完善。这里主要参考了Windows中极点郑码的设计，因为对于输入法来说，非常重要的一点是与其它系统保持一致。另外在设计中，尽量保证每次字词输入按键的一致性，以便于提高输入速度。</para>
+<para>相关的代码在：<link xlink:href="https://github.com/dram/configs/blob/master/.uim.d/plugin/zhengma.scm"/>。另外uim的配置文件可以参考这里：<link xlink:href="https://github.com/dram/configs/blob/master/.uim"/>。</para>
+<para>下面就来介绍uim输入法的一些细节。</para>
+
+<sect1><title>安装</title>
+<para>在Linux中，输入法是通过动态库的方式整合到应用程序中的，所以在安装时需要指定需要加载的输入法模块。在GTK中，可以通过<command>gtk-query-immodules-2.0</command>命令查找当前安装的所有输入法，在其中找到于uim相关行，将其加入到<filename>/etc/gtk-2.0/gtk.immodules</filename>文件中。再通过设置下面环境变量即可完成uim的基本安装设置。</para>
+<screen>export GTK_IM_MODULE=uim
+export XMODIFIERS=@im=uim
+export QT_IM_MODULE=uim</screen>
+<para>这里对uim郑码输入的完善是通过uim模块的方式实现的，安装的方法是将上面提及的文件存放在<literal>$HOME/.uim.d/plugin/</literal>目录，再通过下面的命令对其进行加载：</para>
+<screen>uim-module-manager --register zhengma --path $HOME/.uim.d/plugin/</screen>
+<para>另处还需要安装郑码的码表文件，这里对uim原先的郑码码表进行了一些调整，相关脚本在这里可以找到：<link xlink:href="https://github.com/dram/configs/tree/master/tools/uim-table/"/>。</para>
+</sect1>
+
+<sect1><title>功能完善</title>
+
+<para>接下来简要说明这个郑码模块对原有uim中文输入的优化。</para>
+<sect2><title>自动上屏</title>
+<para>在郑码中，最大码长了4码，所以在极点郑码中，如果已经输入4码，并且没有重码，那么会将唯一的候选词直接上屏。uim中虽然有自动上屏功能，但它会将不到4码的字也直接上屏，并不符合一般的中文输入习惯，这里进行了相应的调整。</para>
+</sect2>
+<sect2><title>第二候选词</title>
+<para>由于对于郑码这类形码输入法来说，重码出现的几率不高，并且在单字输入时，即使有重码，大多也只是两重的，所以需要一个便捷的方法来选取第二候选词。uim默认不具有这一功能，这里与极点保持一致，使用<literal>;</literal>作为第二候选词的按键。</para>
+</sect2>
+<sect2><title>英文上屏</title>
+<para>在编辑一些文档，比如技术文档时，往往需要同时输入中英文，这就需要输入法能够支持在开启中文输入时也可以输入少量的英文。这里与FCITX输入法的处理方式保持一致，使用回车键对英文直接上屏。同时为方便从中文输入切换到英文，使用<literal>Shift+Enter</literal>将现有英文上屏再关闭输入法的中文输入。</para>
+</sect2>
+<sect2><title>状态提示</title>
+<para>在中英文混合输入时，由于经常在中英文输入之间进行切换，所以输入法应该能够直接地提示当前处于什么状态。这里使用候选框作为状态的提示，中文状态下候选框始终显示，而英文状态下不显示。</para>
+</sect2>
+<sect2><title>单字</title>
+<para>在大多中文输入法中，一般都提供是否只输入单字的选项，而这里直接在码表中进行处理，删除了码表中的所有词组。</para>
+</sect2>
+<sect2><title>筛选简体中文</title>
+<para>与单字输入的处理相似，这里通过在码表中删除所有繁体中文的方式实现只输入简体中文的功能，这样可以减少重码数。</para>
+</sect2>
+</sect1>
+
+<sect1 xml:id="vim-input-method"><title>Vim协同工作</title>
+
+<para>对于让输入法与Vim模式切换协同工作的实现方式，主要可以分为在编辑器实现和在输入法中实现。以下对这两者分别予以说明。</para>
+<sect2><title>编辑器实现</title>
+
+<para>编辑器中的实现可以查看GVim的<literal>imdisable</literal>和<literal>noimdisable</literal>参数，具体可以如下设置：</para>
+<screen>autocmd! InsertLeave *  set imdisable
+autocmd! InsertEnter *  set noimdisable</screen>
+<para>通过上面的配置可以让GVim在离开和进入输入模式时对自身窗口的XIM进行同步切换。具体的动作可以描述为：</para>
+<orderedlist>
+<listitem><para>从INSERT转为NORMAL模式时，输入法被禁用。</para></listitem>
+<listitem><para>从NORMAL模式转到INSERT时，如果之前输入法是开启的，将依然保持状态。</para></listitem>
+</orderedlist>
+<para>但这一方式只适用于GVim，对于虚拟终端下的Vim则不能起作用，因为Vim无法控制虚拟终端的XIM。并且不同输入法在GVim中imdisable和noimdisable切换时的行为也不同，所以实际效果并不理想。</para>
+</sect2>
+<sect2><title>输入法实现</title>
+<para>而另一种实现方式是在输入法中实现。比如在SCIM中可以通过将关闭输入法快捷键设置为<literal>ESC + KeyRelease</literal>，也就是将ESC的KeyPress的动作传递给Vim，对KeyRelease动作进行捕捉。</para>
+<para>但这只实现了上述两点中的第1点。在重新回到INSERT模式时，因为SCIM无从知道Vim是否已经回到了INSERT模式，所以无法实现输入法的自动重新开启。</para>
+</sect2>
+<sect2><title>另一种选择</title>
+<para>在这里，通过在输入法中增加临时停用及恢复的功能，再在Vim中通过外部程序模似按键的方式实现了上述两点功能。主要思路为在输入法中监测<literal>ESC</literal>和<literal>Ctrl+C</literal>按键，在有这两个按键时，临时关闭输入法。而在Vim中，在InsertEnter事件时调用外部程序模拟键盘事件，触发输入法临时停用的恢复功能。模拟键盘事件的程序可以在这里查看：<link xlink:href="https://github.com/dram/configs/tree/master/tools/fake-key/"/>。</para>
+</sect2>
+</sect1>
+</chapter>

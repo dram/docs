@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<chapter
+  xmlns="http://docbook.org/ns/docbook"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>其它</title>
+<para>这一章主要介绍Linux桌面应用中的一些零碎技巧。</para>
+
+<sect1><title>待办事项</title>
+<para>用于日程管理的软件有很多，这里参考todo.txt(http://todotxt.com/)在Vim中实现了一个简易的基于文本的待办事项整理工具。</para>
+<para>基本的想法是基于代码高亮进行筛选，基于代码折叠管理已经完成的任务。代码高亮可以在<filename>$HOME/.vimrc</filename>文件中加入下面的配置定义一个<command>:Hi</command>命令：</para>
+<screen>command -nargs=1 Hi :syn clear Search | syn match Search ".*&lt;args&gt;.*"</screen>
+<para>代码折叠可以直接通过在文本中结合使用modeline和标记完成。具体可以参考这个模板：<link xlink:href="https://github.com/dram/docs/blob/master/data/todo.txt"/>。</para>
+</sect1>
+<sect1><title>gtk icon theme</title>
+<para>GTK的Icon样式存放在<filename>/usr/share/icons/</filename>或<filename>$HOME/.icons/</filename>目录下。如果是SVG格式的，注意需要安装librsvg库，并执行下面的语句：</para>
+<screen>gdk-pixbuf-query-loaders > /usr/etc/gtk-2.0/gdk-pixbuf.loaders</screen>
+<para>可以通过<command>gtk-update-icon-cache</command>做一定优化。</para>
+</sect1>
+<!--
+<sect1><title>磁盘检查</title>
+<para>系统默认会定期对磁盘进行检查，可以通过<command>tune2fs -c NUM /dev/hdaN</command>命令进行调整。</para>
+</sect1>
+<sect1><title>鼠标行为设置</title>
+
+<para>鼠标灵敏度可以通过<command>xset m 5/8 1</command>的形式进行配置。</para>
+
+<para>鼠标功能键可以通过<command>xmodmap -e "pointer = 1 7 3 4 5 6 2"</command>设置。</para>
+
+</sect1>
+<sect1><title>DPI</title>
+
+<para>TODO: 有关DPI的说明</para>
+
+<para>通过<command>xdpyinfo | gre resolution</command>可以查看系统当前的DPI。通过<command>xrandr \-\-dpi 98</command>可以对其进行设置。</para>
+
+</sect1>
+-->
+<sect1><title>内核定制</title>
+
+<para>在定制内核时首先需要考虑引导问题，其中包括磁盘IO相关驱动，文件系统相关驱动。这些驱动必须编译到内核中，而不是以模块的方式。不过可以借助于initrd文件系统将需要的模块整合作为二次引导。</para>
+
+<para>比如在VirtualBox中，Device Drivers->SCSI device support->SCSI (disk|CDROM|generic) 都应该编入内核。而File systems一块则可以根据需要选择。</para>
+
+<para>下面以CRUX为例，说明内核定制的基本流程。</para>
+
+<para>在配置内核参数时，可以使用<command>make localyesconfig</command>，它会基于当前系统运行的内核的配置生成新的配置文件，并将当前加载的模块以内嵌的方式包含。</para>
+
+<para>但是由于安装系统没有用到显卡、声卡等模块，所以还需要在此基础上再进行调整，同时作为安装程序的引导内核为了保证兼容性，会包含一些当前设备并不需要的模块，也可以进行裁剪。</para>
+
+<sect2><title>文件系统</title>
+<para>CRUX默认把常用的文件系统都包含在内核中，在调整时可以去除一些。</para>
+
+<para>另外，如果以后需要访问Windows分区的数据，需启用NTFS支持。</para>
+</sect2>
+
+<sect2><title>声卡驱动</title>
+<para>在Linux中，声卡驱动框架主要有OSS和ALSA两种选择。更为上层的应用框架则有Jack, PluseAudio等。CRUX默认没有启用ALSA，需要启用它，同时需要启用声卡硬件驱动，比如Intel HD Audio。</para>
+</sect2>
+
+<sect2><title>其他</title>
+<para>在配置内核时，其他需要注意的要点有：</para>
+<orderedlist>
+  <listitem><para>xorg的evdev需要内核Event interface支持；</para></listitem>
+  <listitem><para>dbus需要System V IPC支持；</para></listitem>
+  <listitem><para>如有需要，启用Suspend to RAM and standby。</para></listitem>
+  <listitem><para>如有需要，启用相应无线网卡驱动；</para></listitem>
+</orderedlist>
+</sect2>
+
+</sect1>
+</chapter>

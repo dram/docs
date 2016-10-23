@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<chapter
+  xmlns="http://docbook.org/ns/docbook"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>文本编辑</title>
+
+<para>对于一个桌面应用系统来说，文本编辑器其实并不是必需的。就比如在Windows中，对一般用户来说，如果有Word等文字处理工具，那么记事本被使用到的频率并不高。但在Linux中有所不同，在很多时候都需要用到文本编辑器。一方面是因为Linux中大量使用文本配置文件，而另一方面Windows中Word的文字处理功能，在Linux中可以通过文本编辑器实现，这将在下一章再作介绍。</para>
+<para>如果只是需要文本编辑器的基本的、核心的功能，那么像记事本这样的程序就可以满足要求，但如果需要更为便捷、更为复杂的功能，那就要使用更为强大的编辑器了。Linux中的编辑器多得甚至于无法记数，最为流行的有Vim和Emacs，下面将要介绍的就是其中的Vim。</para>
+<para>Vim的基本操作就不在这里作介绍了，不太熟悉的读者可以通过<literal>vimtutor</literal>命令学习，下面介绍的主要是一些零散的技巧。</para>
+<para>相关的详细配置可以在<link xlink:href="https://github.com/dram/configs/tree/master/.vimrc"/>和<link xlink:href="https://github.com/dram/configs/tree/master/.vim/"/>中查看。</para>
+<sect1><title>中文处理</title>
+
+<para>有必要先就Vim的中文支持作一说明。Vim本身对于多语言已经有较好的支持。只是在中文句点判断、输入法切换上还不太方便，下面介绍对这些问题的处理。</para>
+<sect2><title>文件编码</title>
+
+<para>在Vim中针对文件编码的选项主要有三个：<literal>fileencoding</literal>、<literal>fileencodings</literal>和<literal>encoding</literal>。其中<literal>encoding</literal>指Vim自身在存储信息时的编码，而<literal>fileencoding</literal>对文件写入起作用，用于指定Vim使用什么编码写入文件。<literal>fileencodings</literal>作用于读取文件时，Vim尝试使用<literal>fileencodings</literal>里所列编码读取文件，如果尝试成功，则将<literal>fileencoding</literal>设置为该编码。</para>
+<para>读取文件时，除了参考<literal>fileencodings</literal>之外，也可以用<literal>:edit ++enc=gbk</literal>的形式直接指定编码。</para>
+<para>基于上面的说明，如果需要更改文件编码，首先通过设置<literal>fileencodings</literal>或直接指定<literal>++enc</literal>参数使Vim正常显示文本，再设置<literal>fileencoding</literal>并保存即可。</para>
+</sect2>
+<sect2><title>中文句点</title>
+
+<para>Vim是基于英文的词语和句子来定义移动的，这样在中文的行内移动就会比较麻烦。对于词语，没有什么好的处理办法，因为这涉及到中文分词问题。而中文句子间的移动还是可以通过配置来实现的。</para>
+<para>英文句子间移动的命令是<literal>(</literal>和<literal>)</literal>，下面配置对这两个命令进行重新定义，使其支持对中文句点的判断。</para>
+<screen>nmap &lt;silent&gt; ( :call search('\n\\|。\\|！\\|？\\|\.\s\\|!\s\\|?\s', "bw")&lt;CR&gt;
+nmap &lt;silent&gt; ) :call search('\n\\|。\\|！\\|？\\|\.\s\\|!\s\\|?\s', "w")&lt;CR&gt;</screen>
+</sect2>
+<sect2><title>输入法切换</title>
+
+<para>在GVim中可以通过下面的设置实现在切换INSERT和NORMAL模式时关闭或重新开启输入法。</para>
+<screen>autocmd! InsertLeave *  set imdisable
+autocmd! InsertEnter *  set noimdisable</screen>
+<para>但上面的命令只对GVim有效，终端下的Vim是无效的，因为实际上<literal>imdisable</literal>作用的是当前的图形窗口程序的输入法开关，而并非是输入法程序的开关。</para>
+<para>至于终端下的Vim，也可以使用在<link linkend="vim-input-method">输入法</link> 一章所介绍的方法。</para>
+</sect2>
+</sect1>
+<sect1><title>普通编辑</title>
+
+<para>接下来介绍在使用Vim编辑普通文件时的一些小的技巧。</para>
+
+<sect2><title>移动</title>
+
+<para><literal>*</literal>和<literal>#</literal>是两个非常有用的快捷键，可以正向或反向查找光标所在单词。</para>
+<para>Vim虽然在显示较长文本行时，会对其进行折叠，然而普通的<literal>j</literal>和<literal>k</literal>命令依然只是在真实的行之间进行移动，但可以使用<literal>gj</literal>和<literal>gk</literal>命令在行内的折叠行间移动。</para>
+<para>行内的移动还可以通过<literal>f</literal>和<literal>F</literal>命令处理，这两个命令用于进行行内搜索。<literal>;</literal>用于重复<literal>f</literal>或<literal>F</literal>的动作。</para>
+<para>更为复杂的移动操作可以通过mark实现，<literal>m[a-z]</literal>用于标记光标当前位置，通过<literal>`[a-z]</literal>回到相应mark所在位置，而<literal>'[a-z]</literal>则是回到mark所在行。</para>
+</sect2>
+<sect2><title>换行符</title>
+
+<para>在Winodows中以<literal>\r\n</literal>表示换行，Unix中以<literal>\n</literal>表示，Mac中以<literal>\r</literal>表示，因为这个原因，在跨平台工作时，还是会带来不少麻烦的，好在Vim中可以方便地对换行符进行识别和转化。</para>
+<para>Vim中换行符的处理与上面说明的文件编码处理是类似的，<literal>fileformats</literal>作用于读取，<literal>fileformat</literal>作用于写入。而<literal>++ff</literal>对应于<literal>++enc</literal>。</para>
+</sect2>
+<sect2><title>复制粘贴</title>
+
+<para>在桌面环境一章中已经提到，X11窗口系统中有两套复制粘贴的方式，但可以通过<literal>autocutsel</literal>命令将其同步。而在Vim中，又有其自身的复制粘贴的方式。具体说来，Vim中的<literal>"*</literal>register相对于 X11 的selection，而<literal>"+</literal>相对于X11的clipboard。</para>
+</sect2>
+<sect2><title>文件切换</title>
+
+<para>在编辑文件时，往往不是对单个文件进行处理，而是同时对多个文件进行编辑。这样在文件之间方便地切换就显得比较重要了，下面介绍常用的几种方式。</para>
+<sect3><title>打开文件所在目录</title>
+
+<para>编辑的多个文件常常在同一目录中，这时可以通过<literal>:cd %:h</literal>命令让Vim先跳转到该目录，再结合<literal>:edit</literal>命令以及<literal>Ctrl-D</literal>补全打开需要的文件。</para>
+<para>也可以直接使用<literal>:edit %:h</literal>命令，通过Vim的netrw组件打开该目录。</para>
+<para>另外还可以在Vim配置文件中加入下面的配置，这样在输入<literal>:edit %/</literal>之后，Vim会将<literal>%/</literal>替换为当前文件所在目录的路径。</para>
+<screen>cmap %/ &lt;C-R&gt;=expand("%:p:h")."/"&lt;cr&gt;</screen>
+</sect3>
+
+<sect3><title>MRU插件</title>
+
+<para>MRU<footnote><para>MRU插件可以从<link xlink:href="http://www.vim.org/scripts/script.php?script_id=521"/>下载，存放到<filename>$HOME/.vim/plugin/</filename>目录下即可。</para></footnote>插件用于记录最近打开的文件。通过<literal>:MRU</literal>命令打开MRU窗口。由于经常使用，可以对其设置快捷键：</para>
+<screen>let mapleader = ','
+nmap &lt;silent&gt; &lt;leader&gt;m         :MRU&lt;CR&gt;</screen>
+</sect3>
+<sect3><title>buffer</title>
+
+<para>Vim对于打开过的文件，会以buffer的形式加以管理。通过<literal>:buffers</literal>或<literal>:ls</literal>命令可以查看当前打开的所有文件。<literal>:bn</literal>和<literal>:bp</literal>命令用于在buffer间切换，也可以使用<literal>:b num</literal>直接跳转到指定buffer。<literal>:bd</literal>用于删除buffer。另外如果不想关闭Vim，只是想关闭对该文件的编辑，可以使用<literal>:bd</literal>代替<literal>:q</literal>。</para>
+</sect3>
+<sect3><title>最近编辑</title>
+
+<para>在编写程序时，经常需要在两个文件之间进行切换，比如<literal>.h</literal>和<literal>.c</literal>文件间，或者实现与调用间，或者实现与测试间，或者编辑和帮助间的切换，<literal>CTRL-6</literal>,<literal>CTRL-^</literal>或<literal>:e #</literal>可以用来在两个最近编辑的文件间切换。</para>
+<para>具体说明可以查看<literal>:h CTRL-6</literal>。</para>
+</sect3>
+</sect2>
+<sect2><title>INSERT模式</title>
+
+<para>Vim注重NORMAL模式下的便捷处理，在INSERT模式下一般主要还是进行简单的文本输入操作。但Vim也支持在INSERT模式下的一些快捷操作。</para>
+<para>比如<literal>CTRL-W</literal>可以删除一个单词，而<literal>CTRL-U</literal>可以删除一整行。另外<literal>CTRL-N</literal>和<literal>CTRL-P</literal>这两个快捷键可以进行简单的文本补全。</para>
+<para><literal>Ctrl-R</literal>可以用来插入register的内容，可以使用这一功能完成在INSERT模式下的粘贴功能。其中<literal>"</literal>是unnamed register，<literal>+</literal>是clipboard，<literal>*</literal>是selection。详细信息可以查看<command>:h i_CTRL-R</command>。</para>
+<para>在INSERT模式下，<literal>Ctrl-O</literal>可以临时进入NORMAL模式执行一个命令。详细信息可以查看<command>:h i_CTRL-O</command>。</para>
+<para>通过<literal>:h ins-special-keys</literal>可以查看INSERT模式下所有快捷方式的详细说明。</para>
+</sect2>
+</sect1>
+<sect1><title>代码编写</title>
+
+<para>Vim更多的是用于代码编写，它对于大多数语言都有很好的支持。以下介绍一些使用Vim进行代码编写的技巧。</para>
+<sect2><title>代码风格</title>
+
+<para>不同类型的程序往往会有不同的代码风格，比如C语言一般以Tab缩进，而Python则更多的以4个空格进行缩进。</para>
+<para>在Vim中可以在<filename>$HOME/.vim/ftplugin/</filename>目录中创建以类型名启始命名的文件对该类型进行定制。比如可以在<literal>$HOME/.vim/ftplugin/python_own.vim</literal>文件中加入：</para>
+<screen>setl shiftwidth=4
+setl expandtab</screen>
+<para>甚至可以为不同的文件类型创建不同的快捷键，同样是在该文件中加入下面的配置后，可以通过<literal>&lt;leader&gt;r</literal>快捷键运行该Python脚本文件。</para>
+<screen>nmap &lt;buffer&gt; &lt;leader&gt;r         :w&lt;cr&gt;:!python %&lt;cr&gt;</screen>
+<para>另外，通过colorcolumn可以在代码行超出指定长度时给予提示，从而保持良好的代码风格，具体配置如下：</para>
+<screen>set colorcolumn=81
+hi ColorColumn ctermbg=darkgrey</screen>
+</sect2>
+<sect2><title>text objects</title>
+
+<para>Vim有一text object的概念，这在编写程序时非常有用，可以对<literal>()</literal>,<literal>""</literal>,<literal>&lt;&gt;&lt;/&gt;</literal>等整体进行处理，比如<command>di(</command>可以删除括号内的文本，<command>ci"</command>可以修改引号内的文件。详细说明可以查看<literal>:h text-objects</literal>。</para>
+</sect2>
+<sect2><title>简单的模板</title>
+
+<para>很多的程序文件特别是脚本语言中每个文件都有部分固定的格式，在Vim中可以通过<literal>autocmd</literal>命令实现简单的模板功能，以避免重复劳动。下面以Python脚本为例作简单说明。</para>
+<para>首先需要一个模板文件，比如<literal>~/.vim/templates/template.py</literal>：</para>
+<screen>#!/bin/env python
+# vim: set fileencoding=utf-8
+
+
+if __name__ == '__main__':
+    pass</screen>
+<para>再是在<literal>.vimrc</literal>中通过<literal>autocmd</literal>命令设置在新建<literal>.py</literal>文件时自动读取模板中的内容：</para>
+<screen>au BufNewFile *.py :0r ~/.vim/templates/template.py</screen>
+</sect2>
+</sect1>
+<sect1><title>其它技巧</title>
+
+<sect2><title>查看man</title>
+
+<para>Vim下的<literal>:Man</literal>可以用来查看man文档。这在编写C程序或SHELL脚本时都非常有用。</para>
+</sect2>
+<sect2><title>Caps Lock替换ESC</title>
+
+<para>很多Emacs的用户会将Caps Lock键替换为Ctrl，而在Vim也可以借鉴这一方式，将Caps Lock替换为Esc键。</para>
+<para>首先创建<literal>$HOME/.Xmodmap</literal>文件，内容为：</para>
+<screen>! Swap caps lock and escape
+remove Lock = Caps_Lock
+keysym Escape = Caps_Lock
+keysym Caps_Lock = Escape
+add Lock = Caps_Lock</screen>
+<para>然后在<literal>$HOME/.xinitrc</literal>中加入：</para>
+<screen>if [ -f ~/.Xmodmap ]; then
+    xmodmap ~/.Xmodmap
+fi</screen>
+<para>另外，在Windows中也可以通过注册表设置，用以下内容创建reg文件并运行即可。</para>
+<screen>REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layout]
+"Scancode Map"=hex:00,00,00,00,00,00,00,00,02,00,00,00,01,00,3a,00,00,00,00,00</screen>
+</sect2>
+</sect1>
+<sect1><title>扩展</title>
+
+<para>Vim的一个重要特点是可以通过多种语言对其进行扩展，同时它也有自身的脚本语言。在下面的多媒体一章将使用Vim的可扩展性实现一个简单的音频播放器。</para>
+</sect1>
+</chapter>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<chapter
+  xmlns="http://docbook.org/ns/docbook"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>多媒体</title>
+
+<para>多媒体应用主要包括音频和视频，这里主要介绍Linux下音频播放相关内容。</para>
+
+<sect1><title>音频播放器</title>
+
+<para>虽然在线视听已经有多年的发展，网络收音机、音乐盒等概念也在近两年逐渐流行，但音乐播放器作为传统的桌面应用程序，依然在桌面应用中占有着非常重要的地位。所以在Linux中有着大量的音乐播放器可供选择。</para>
+<para>从用户角度来说，音乐播放器中最为重要的功能包括：解码播放、资源管理、播放列表、播放控制。</para>
+<para>由于没有找到合适的软件，这里通过mpg123和Vim实现了一个简易的播放器。mpg123有一个非常方便的开发接口<footnote><para>通过mpg123的<code>--remote</code>参数可以利用mpg123进程在标准输入输出对mpg123进行控制。</para></footnote>，通过它可以方便地对其进行包装。完整的代码如下：</para>
+<variablelist>
+<varlistentry>
+<term>vim-mpg123.py</term>
+<listitem><para><link xlink:href="https://github.com/dram/configs/tree/master/bin/vim-mpg123.py"/></para></listitem>
+</varlistentry>
+<varlistentry>
+<term>mpg123.vim</term>
+<listitem><para><link xlink:href="https://github.com/dram/configs/blob/master/.vim/plugin/mpg123.vim"/></para></listitem>
+</varlistentry>
+<varlistentry>
+<term>xchainkeys配置文件</term>
+<listitem><para><link xlink:href="https://github.com/dram/configs/blob/master/.config/xchainkeys/xchainkeys.conf"/></para></listitem>
+</varlistentry>
+</variablelist>
+<para>下面分别就上述四个方面对这一播放器的实现作简要说明。</para>
+</sect1>
+<sect1><title>解码播放</title>
+<para>这里的解码播放功能通过mpg123实现，它只支持MP3格式文件，现在虽然有OGG, WMA等有损压缩格式以及FLAC, APE等无损压缩格式的出现，但MP3依然是最为通用和流行的一种格式。如果需要对多种格式进行支持，可以考虑GStreamer等解码库<footnote><para>GStreamer提供多种语言接口，<link xlink:href="https://github.com/dram/configs/blob/master/bin/vim-gst-srv.py"/>这里是一个Python接口的示例。</para></footnote>。</para>
+<para>另外，为了能通过多种途径控制播放，这里使用C/S模式组织程序，以FIFO文件为接口。</para>
+</sect1>
+<sect1><title>资源管理</title>
+<para>现在很多播放器以媒体库的形式组织音乐，但就个人而言，简单的目录结构组织已经足够，所以这里的资源管理和浏览实际上就是在Vim编辑器中显示目录内容。同时定义了一些快捷键用于向播放器服务端发送指令。</para>
+</sect1>
+<sect1><title>播放列表</title>
+
+<para>很多播放器在显示播放列表时会读取音频文件的ID3信息，而这里做了简化处理，直接显示文件名。文件名事先经过整理，包含了track number以及title信息。</para>
+</sect1>
+<sect1><title>播放控制</title>
+
+<para>由于采用了C/S模式，可以实现多种播放控制方式，这里除了可以在Vim中控制外，还可以通过键盘直接控制播放，详细信息请查看xchainkeys的配置文件。</para>
+<para>另外，音量控制一般会在systray下实现，像Gnome，KDE都会在systray中显示音量控制图标，显示当前音量，同时通过它也可以对音量进行调节。而其它窗口管理器也可以使用gvolwheel, pyvolwheel等程序得到同样的功能。</para>
+<para>而这里则是使用ossmix、xchainkeys和libnotify<footnote><para>libnotify基于dbus通过C/S模式实现，现在的daemon端依赖于一些Gnome库，但也可以选用XFCE的daemon实现。</para></footnote>提供了完全的键盘控制，因为对于音量调节不外乎这么几个功能：增大音量、减小音量，还有静音切换。这些功能完全可以通过键盘控制。具体实现可以查看下面的代码以及xchainkeys的配置。</para>
+<variablelist>
+<varlistentry><term>volume-control</term>
+<listitem><para><link xlink:href="https://github.com/dram/configs/blob/master/bin/volume-control"/></para></listitem>
+</varlistentry>
+<varlistentry><term>volume-control-alsa</term>
+<listitem><para><link xlink:href="https://github.com/dram/configs/blob/master/bin/volume-control-alsa"/></para></listitem>
+</varlistentry>
+</variablelist>
+</sect1>
+</chapter>
