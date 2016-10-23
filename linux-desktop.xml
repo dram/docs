@@ -947,11 +947,12 @@ fi</screen>
 </sect2>
 
 <sect2><title>其他</title>
-<para>其他还需要注意的有：</para>
+<para>在配置内核时，其他需要注意的要点有：</para>
 <orderedlist>
-  <listitem><para>键盘和鼠标等输入设备一般需要启用Event interface；</para></listitem>
-  <listitem><para>需要选择无线网卡驱动：</para></listitem>
-  <listitem><para>dbus需要System V IPC支持。</para></listitem>
+  <listitem><para>xorg的evdev需要内核Event interface支持；</para></listitem>
+  <listitem><para>dbus需要System V IPC支持；</para></listitem>
+  <listitem><para>如有需要，启用Suspend to RAM and standby。</para></listitem>
+  <listitem><para>如有需要，启用相应无线网卡驱动；</para></listitem>
 </orderedlist>
 </sect2>
 
