@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # vim: set fileencoding=utf-8
 
 import re
@@ -13,7 +13,7 @@ from xml.dom import minidom
 
 def add_space(text):
     def isalnum(c):
-        return c in (string.digits + string.letters)
+        return c in (string.digits + string.ascii_letters)
 
     def ismulti(c):
         return ord(c) > 128
@@ -43,7 +43,7 @@ def all_text_nodes(root):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print "Usage: convert.py in [out]"
+        print("Usage: convert.py in [out]")
         sys.exit(1)
 
     if len(sys.argv) == 2:
@@ -75,6 +75,6 @@ if __name__ == '__main__':
                 nxt.data = ' ' + nxt.data
 
     if  outfile == '-':
-        print doc.toxml().encode('utf-8')
+        print(doc.toxml())
     else:
         codecs.open(outfile, 'w', 'utf-8').write(doc.toxml())
