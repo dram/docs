@@ -2,7 +2,7 @@
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:fo="http://www.w3.org/1999/XSL/Format">
 
-<xsl:import href="/usr/share/docbook-xsl-ns/html/docbook.xsl"/>
+<xsl:import href="/usr/share/sgml/docbook/xsl-ns-stylesheets/html/docbook.xsl"/>
 
 <xsl:output method="html" encoding="UTF-8" indent="yes"/>
 
