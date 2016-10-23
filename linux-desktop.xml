@@ -121,7 +121,8 @@
 
 <para>对于时间的调整主要包括时区和时间的设置。时区的配置文件是<literal>/etc/localtime</literal>，从<literal>/usr/share/zoneinfo/</literal>中拷贝相应时区的文件到<literal>/etc/localtime</literal>即可完成对时区的修改。比如中国一般选择<filename>Asia/Shanghai</filename><footnote><para>需要注意的是，在将时区设置为Asia/Shanghai之后，date命令在输出时区时会显示<literal>CST</literal>，而CST有两种含义，分别是Central Standard Time和China Standard Time。通过<command>date +%z</command>则可以看到数值表示的时区。具体关于时区的缩写可以到这里查看：<link xlink:href="http://en.wikipedia.org/wiki/List_of_time_zone_abbreviations"/>。</para></footnote>。</para>
 <para>设置系统时间可以通过<literal>date</literal>命令完成，格式为：<literal>date MMDDhhmmCCYY</literal>。M为月，D为日，h为时，m为分，CCYY为年。当然也可以使用ntp进行同步。</para>
-<para>通过<literal>date</literal>命令设置的其实是系统的时间，并没有同步到物理时钟，通过<literal>/sbin/hwclock --systohc</literal>进行同步，但各发行版一般都会在系统关机脚本中加入物理时钟自动同步功能。</para>
+<para>通过<literal>date</literal>命令设置的其实是系统的时间，并没有同步到物理时钟，通过<literal>hwclock --systohc</literal>进行同步，但各发行版一般都会在系统关机脚本中加入物理时钟自动同步功能。</para>
+<para>Windows默认物理时钟为本地时间，如果是多系统启动，那么可以在Linux中也设置为默认本地时间。只需要在运行<command>hwclock --systohc</command>命令时加入<literal>--localtime</literal>参数即可。</para>
 </sect2>
 </sect1>
 <sect1><title>优化配置</title>
