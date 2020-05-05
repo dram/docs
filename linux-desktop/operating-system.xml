@@ -85,6 +85,22 @@
       <para>在Gentoo中安装<literal>net-misc/ntp</literal>包后，可以通过<literal>ntp-client</literal>服务和NTP服务器同步时间，详细说明见：<link xlink:href="https://wiki.gentoo.org/wiki/Ntp"/>。</para>
       <para>Windows默认物理时钟为本地时间，如果是多系统启动，那么可以在Linux中也设置为默认本地时间。只需要在运行<command>hwclock --systohc</command>命令时加入<literal>--localtime</literal>参数即可。</para>
     </sect2>
+
+    <sect2>
+      <title>电源管理</title>
+
+      <para>Linux中，默认只有root用户可以对系统执行关机、重启、休眠等操作。可以基于polkit和logind将相关权限赋予普通用户。具体配置如下：</para>
+      <para>创建<filename>/etc/polkit-1/rules.d/45-power-management.rules</filename>文件，包含以下内容：</para>
+      <programlisting>polkit.addRule(function(action, subject) {
+    if ((action.id == "org.freedesktop.login1.reboot"
+         || action.id == "org.freedesktop.login1.suspend"
+         || action.id == "org.freedesktop.login1.power-off")
+        &amp;&amp; subject.isInGroup("wheel")) {
+         return polkit.Result.YES;
+    }
+});</programlisting>
+<para>以上配置将电源管理相关权限赋予<literal>wheel</literal>组用户，该组用户可通过<command>loginctl poweroff</command>等命令执行相关操作。</para>
+    </sect2>
   </sect1>
 
   <sect1>
