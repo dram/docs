@@ -21,8 +21,8 @@ DOCBOOK_RNG := ${HOME}/docbook-5.0/rng/docbook.rng
 	fop -q -c fop.xconf '$^'.fo $@ >/dev/null 2>&1
 	rm -f tmp-'$^' '$^'.fo
 
-%.html: %.xml
-	python3 prettify.py $< | pandoc -s -f docbook -t html -o $@ -
+%.html: %.xml html.xsl
+	python3 prettify.py $< | xsltproc -o $@ html.xsl -
 
 .PHONY: all html clean
 
