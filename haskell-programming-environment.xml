@@ -15,7 +15,7 @@
   <chapter>
     <title>Haskell安装</title>
 
-    <para>可以通过多种方式安装Haskell，例如iHaskell Platform、Haskell Tool Stack、ghcup，或者Linux各发行版提供的安装包。</para>
+    <para>可以通过多种方式安装Haskell，例如Haskell Platform、Haskell Tool Stack、ghcup，或者Linux各发行版提供的安装包。</para>
 
     <para>这里采用ghcup方式，首先从<link xlink:href="https://downloads.haskell.org/~ghcup/"/>下载对应系统的ghcup二进制文件，例如<command>x86_64-linux-ghcup</command>对应64位Linux系统。之后执行<command>./x86_64-linux-ghcup install ghc</command>安装GHC，再执行<command>./x86_64-linux-ghcup install cabal</command>安装Cabal即可。</para>
   </chapter>

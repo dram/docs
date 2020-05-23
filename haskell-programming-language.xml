@@ -13,6 +13,26 @@
   </info>
 
   <chapter>
+    <title>惰性</title>
+
+    <para>惰性是Haskell一个重要特点，在编程实践中可以加以利用，但有时也需要注意规避。</para>
+
+    <para>例如以下代码，因为惰性的存在，导致与预期不一致：</para>
+
+    <programlisting>main = do
+  contents &lt;- readFile "foo.txt"
+  writeFile "foo.txt" ("# " ++ contents)</programlisting>
+
+    <para><command>runghc foo.hs</command>会提示以下错误：</para>
+
+    <screen>foo.hs: foo.txt: openFile: resource busy (file is locked)</screen>
+
+    <para>原因是因为惰性计算，在执行<code>writeFile</code>时，<code>readFile</code>还没有结束，导致文件还处于打开状态。在<link xlink:href="https://wiki.haskell.org/Maintaining_laziness#Input_and_Output"/>有详细的讨论。</para>
+
+    <para>至于以上问题的一个解决方案，是利用<code>Data.Text.IO</code>中的<code>readFile</code>接口替代。</para>
+  </chapter>
+
+  <chapter>
     <title>随机</title>
 
     <para>在许多编程语言中，存在<code>shuffle</code>函数，可以用于打乱列表元素的顺序，Haskell并没有提供这样的函数，但可以通过random包实现，示例代码如下：</para>
