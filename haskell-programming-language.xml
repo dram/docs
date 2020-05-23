@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+
+<book version="5.0"
+      xmlns="http://docbook.org/ns/docbook"
+      xmlns:xlink="http://www.w3.org/1999/xlink">
+  <info>
+    <title>Haskell编程语言</title>
+    <author>
+      <personname>王欣</personname>
+      <email>dram.wang@gmail.com</email>
+    </author>
+    <releaseinfo>draft r0.1, 2020-05-23</releaseinfo>
+  </info>
+
+  <chapter>
+    <title>随机</title>
+
+    <para>在许多编程语言中，存在<code>shuffle</code>函数，可以用于打乱列表元素的顺序，Haskell并没有提供这样的函数，但可以通过random包实现，示例代码如下：</para>
+
+    <programlisting>shuffle :: [a] -&gt; IO [a]
+shuffle list = do
+  numbers &lt;- mapM (const System.Random.randomIO) list :: IO [Int]
+  return (map snd (Data.List.sortOn fst (zip numbers list)))</programlisting>
+
+    <para>在<link xlink:href="https://wiki.haskell.org/Random_shuffle"/>中有更多实现可供参考。</para>
+  </chapter>
+
+</book>
