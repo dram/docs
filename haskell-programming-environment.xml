@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+
+<book version="5.0"
+      xmlns="http://docbook.org/ns/docbook"
+      xmlns:xlink="http://www.w3.org/1999/xlink">
+  <info>
+    <title>Haskell编程环境</title>
+    <author>
+      <personname>王欣</personname>
+      <email>dram.wang@gmail.com</email>
+    </author>
+    <releaseinfo>draft r0.1, 2020-05-23</releaseinfo>
+  </info>
+
+  <chapter>
+    <title>Haskell安装</title>
+
+    <para>可以通过多种方式安装Haskell，例如iHaskell Platform、Haskell Tool Stack、ghcup，或者Linux各发行版提供的安装包。</para>
+
+    <para>这里采用ghcup方式，首先从<link xlink:href="https://downloads.haskell.org/~ghcup/"/>下载对应系统的ghcup二进制文件，例如<command>x86_64-linux-ghcup</command>对应64位Linux系统。之后执行<command>./x86_64-linux-ghcup install ghc</command>安装GHC，再执行<command>./x86_64-linux-ghcup install cabal</command>安装Cabal即可。</para>
+  </chapter>
+
+  <chapter>
+    <title>Haskell包管理：Cabal</title>
+
+    <sect1>
+      <title>多版本管理</title>
+
+      <para>通过<filename>~/.ghc/x86_64-linux-8.8.3/environments/default</filename>文件，可以选择需要加载的包版本。</para>
+    </sect1>
+
+    <sect1>
+      <title>依赖问题解决</title>
+
+      <para>由于Haskell包之间有复杂的依赖关系，如果陆续安装包，可能会出现依赖冲突。</para>
+      <para>比较简单的一种处理方式是先删除<filename>~/.cabal/store</filename>目录，之后再通过单条<command>cabal</command>目录重新安装所有包。</para>
+    </sect1>
+  </chapter>
+
+  <chapter>
+    <title>Haskell调试</title>
+
+    <para>Haskell的编译时错误提示相对详尽，所以可以快速基于错误信息找到问题，但对于运行时问题，则较难定位，究其原因，最主要是因为没有调用栈。对于这个问题，在<link xlink:href="https://gitlab.haskell.org/ghc/ghc/-/wikis/explicit-call-stack"/>有一些讨论，这里采用profiling的机制处理，具体包括以下步骤：</para>
+
+    <orderedlist>
+      <listitem>
+        <para>在<filename>~/.cabal/config</filename>中添加<literal>library-profiling: True</literal>，再基于<command>cabal --lib</command>安装依赖包。（不确定为何指定<command>--enable-library-profiling</command>不起作用）</para>
+      </listitem>
+      <listitem>
+        <para>以<command>ghc -prof -fprof-auto</command>命令编译程序；</para>
+      </listitem>
+      <listitem>
+        <para>以<command>+RTS -xc</command>参数运行程序。</para>
+      </listitem>
+    </orderedlist>
+    <para>注意：当前不确定如何同时支持profiling模式和动态链接（编译时提示p_dyn库缺失），所以不能同时向ghc指定<command>-prof</command>和<command>-dynamic</command>参数。</para>
+
+    <para>对于Profiling，<link xlink:href="https://ghc.gitlab.haskell.org/ghc/doc/users_guide/profiling.html"/>有详细说明。</para>
+  </chapter>
+</book>
