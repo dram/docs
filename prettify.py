@@ -58,11 +58,10 @@ if __name__ == '__main__':
         node.data = add_space(node.data)
 
     literals = functools.reduce(
-                operator.add,
-                [doc.getElementsByTagName(x)
-                    for x in [
-                        'literal', 'command', 'link', 'filename',
-                        'userinput', 'computeroutput']])
+        operator.add,
+        [doc.getElementsByTagName(x)
+         for x in ['code', 'literal', 'command', 'link', 'filename',
+                   'userinput', 'computeroutput']])
 
     for item in literals:
         prev = item.previousSibling
