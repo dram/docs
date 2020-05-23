@@ -15,14 +15,14 @@ DOCBOOK_RNG := ${HOME}/docbook-5.0/rng/docbook.rng
 
 %.pdf: %.xml
 	java -jar ${JING_JAR} ${DOCBOOK_RNG} '$^'
-	./optimize-char-spacing.py '$^' tmp-'$^'
+	python3 prettify.py '$^' tmp-'$^'
 	java -jar ${JING_JAR} ${DOCBOOK_RNG} tmp-'$^'
 	xsltproc -o '$^'.fo fo.xsl tmp-'$^'
 	fop -q -c fop.xconf '$^'.fo $@ >/dev/null 2>&1
 	rm -f tmp-'$^' '$^'.fo
 
 %.html: %.xml html.xsl
-	./optimize-char-spacing.py $< | xsltproc -o $@ html.xsl -
+	python3 prettify.py $< | xsltproc -o $@ html.xsl -
 
 .PHONY: all html clean
 

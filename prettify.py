@@ -1,14 +1,8 @@
-#!/usr/bin/env python3
-# vim: set fileencoding=utf-8
-
-import re
-import os
 import sys
 import codecs
 import string
 import operator
 import functools
-import itertools
 from xml.dom import minidom
 
 def add_space(text):
@@ -43,7 +37,7 @@ def all_text_nodes(root):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print("Usage: convert.py in [out]")
+        print("Usage: prettify.py in [out]")
         sys.exit(1)
 
     if len(sys.argv) == 2:
