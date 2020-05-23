@@ -10,15 +10,13 @@ all: ${PDFS}
 
 html: ${HTMLS}
 
-JING_JAR := ${HOME}/tools/jing-20091111/bin/jing.jar
-DOCBOOK_RNG := ${HOME}/docbook-5.0/rng/docbook.rng
+DOCBOOK_RNG := docbook-5.1/rng/docbook.rng
 
 %.pdf: %.xml
-	java -jar ${JING_JAR} ${DOCBOOK_RNG} '$^'
 	python3 prettify.py '$^' tmp-'$^'
-	java -jar ${JING_JAR} ${DOCBOOK_RNG} tmp-'$^'
+	python3 validate.py tmp-'$^'
 	xsltproc -o '$^'.fo fo.xsl tmp-'$^'
-	fop -q -c fop.xconf '$^'.fo $@ >/dev/null 2>&1
+	fop -q -c fop.xconf '$^'.fo $@
 	rm -f tmp-'$^' '$^'.fo
 
 %.html: %.xml html.xsl
