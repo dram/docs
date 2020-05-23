@@ -10,11 +10,20 @@
         <font kerning="yes" embed-url="fonts/cmunrm.ttf">
           <font-triplet name="CMU Serif" style="normal" weight="normal"/>
         </font>
+        <font kerning="yes" embed-url="fonts/cmunbx.ttf">
+          <font-triplet name="CMU Serif" style="normal" weight="bold"/>
+        </font>
+        <font kerning="yes" embed-url="fonts/cmunss.ttf">
+          <font-triplet name="CMU Sans Serif" style="normal" weight="normal"/>
+        </font>
         <font kerning="yes" embed-url="fonts/cmunsx.ttf">
           <font-triplet name="CMU Sans Serif" style="normal" weight="bold"/>
         </font>
         <font kerning="yes" embed-url="fonts/cmuntt.ttf">
           <font-triplet name="CMU Typewriter Text" style="normal" weight="normal"/>
+        </font>
+        <font kerning="yes" embed-url="fonts/cmuntb.ttf">
+          <font-triplet name="CMU Typewriter Text" style="normal" weight="bold"/>
         </font>
         <font kerning="yes" embed-url="fonts/gbsn00lp.ttf">
           <font-triplet name="AR PL SungtiL GB" style="normal" weight="normal"/>
@@ -22,11 +31,13 @@
         <font kerning="yes" embed-url="fonts/gkai00mp.ttf">
           <font-triplet name="AR PL KaitiM GB" style="normal" weight="normal"/>
         </font>
-        <font kerning="yes" embed-url="fonts/DroidSansFallback.ttf">
-          <font-triplet name="Droid Sans Fallback" style="normal" weight="normal"/>
+        <font kerning="yes" embed-url="fonts/SourceHanSansCN-Normal.otf">
+          <font-triplet name="Source Han Sans" style="normal" weight="normal"/>
+        </font>
+        <font kerning="yes" embed-url="fonts/SourceHanSansCN-Bold.otf">
+          <font-triplet name="Source Han Sans" style="normal" weight="bold"/>
         </font>
       </fonts>
     </renderer>
   </renderers>
 </fop>
-

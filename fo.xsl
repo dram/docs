@@ -2,7 +2,7 @@
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:fo="http://www.w3.org/1999/XSL/Format">
 
-<xsl:import href="/usr/share/xml/docbook/xsl-ns-stylesheets-1.76.1/fo/docbook.xsl"/>
+<xsl:import href="/usr/share/sgml/docbook/xsl-stylesheets/fo/docbook.xsl"/>
 
 <xsl:param name="paper.type" select="'A4'"/>
 
@@ -21,7 +21,7 @@
 <xsl:param name="body.font.family">
   CMU Serif,AR PL SungtiL GB</xsl:param>
 <xsl:param name="title.font.family">
-  CMU Sans Serif,Droid Sans Fallback</xsl:param>
+  CMU Sans Serif,Source Han Sans</xsl:param>
 <xsl:param name="monospace.font.family">
   CMU Typewriter Text,AR PL KaitiM GB</xsl:param>
 <xsl:param name="symbol.font.family">

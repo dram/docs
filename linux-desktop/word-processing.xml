@@ -56,23 +56,22 @@
 <para>本文档使用的字体主要有：文鼎PL简报宋、文鼎PL简中楷、Computer Modern Unicode以及Droid Sans Fallback。</para>
 <variablelist>
 <varlistentry><term><literal>文鼎PL简报宋</literal></term>
-<listitem><para><link xlink:href="http://ftp.debian.org/debian/pool/main/t/ttf-arphic-gbsn00lp/ttf-arphic-gbsn00lp_2.11.orig.tar.gz"/></para>
+<listitem><para><link xlink:href="http://deb.debian.org/debian/pool/main/f/fonts-arphic-gbsn00lp/fonts-arphic-gbsn00lp_2.11.orig.tar.xz"/></para>
 </listitem>
 </varlistentry>
 <varlistentry><term><literal>文鼎PL简中楷</literal></term>
-<listitem><para><link xlink:href="http://ftp.debian.org/debian/pool/main/t/ttf-arphic-gkai00mp/ttf-arphic-gkai00mp_2.11.orig.tar.gz"/></para>
+<listitem><para><link xlink:href="http://deb.debian.org/debian/pool/main/f/fonts-arphic-gkai00mp/fonts-arphic-gkai00mp_2.11.orig.tar.xz"/></para>
 </listitem>
 </varlistentry>
 <varlistentry><term><literal>Computer Modern Unicode</literal></term>
-<listitem><para><link xlink:href="http://canopus.iacp.dvo.ru/~panov/cm-unicode/"/></para>
+<listitem><para><link xlink:href="http://deb.debian.org/debian/pool/main/f/fonts-cmu/fonts-cmu_0.7.0.orig.tar.xz"/></para>
 </listitem>
 </varlistentry>
-<varlistentry><term><literal>Droid Sans Fallback</literal></term>
-<listitem><para><link xlink:href="http://android.git.kernel.org/?p=platform/frameworks/base.git;a=tree;f=data/fonts"/></para>
+<varlistentry><term><literal>思源黑体（Source Han Sans）</literal></term>
+<listitem><para><link xlink:href="https://raw.githubusercontent.com/adobe-fonts/source-han-sans/release/SubsetOTF/SourceHanSansCN.zip"/></para>
 </listitem>
 </varlistentry>
 </variablelist>
-<para>FOP不能直接读取其中的Droid Sans Fallback字体，需要使用fontforge打开该字体再重新导出为TTF字体。</para>
 <para>设置FOP的字体分两步进行。先是让FOP识别这些字体，这个通过FOP的配置文件完成，再是让PDF文档使用这些字体，这个通过DocBook的XSL文件进行设置。详细的配置可以查看下面两份文件：</para>
 <variablelist>
 <varlistentry><term><literal>fop.xconf</literal></term>
