@@ -39,13 +39,10 @@ def all_text_nodes(root):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print("Usage: prettify.py in [out]")
+        print("Usage: transform.py in [out]")
         sys.exit(1)
 
-    if len(sys.argv) == 2:
-        infile, outfile = sys.argv[1], '-'
-    else:
-        infile, outfile = sys.argv[1], sys.argv[2]
+    stylesheet, infile, outfile = sys.argv[1:]
 
     doc = xml.dom.minidom.parse(infile)
 
@@ -76,11 +73,14 @@ if __name__ == '__main__':
             if not nxt.data[0].isspace():
                 nxt.data = ' ' + nxt.data
 
-    rng = lxml.etree.RelaxNG(file="docbook/rng/docbook.rng")
+    xml = lxml.etree.fromstring(doc.toxml())
 
-    rng.assertValid(lxml.etree.fromstring(doc.toxml()))
+    lxml.etree.RelaxNG(file="docbook/rng/docbook.rng").assertValid(xml)
+
+    result = lxml.etree.tounicode(
+        lxml.etree.XSLT(lxml.etree.parse(stylesheet))(xml))
 
     if outfile == '-':
-        print(doc.toxml())
+        sys.stdout.write(result)
     else:
-        codecs.open(outfile, 'w', 'utf-8').write(doc.toxml())
+        open(outfile, 'w').write(result)

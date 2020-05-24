@@ -7,10 +7,10 @@ all: ${PDFS}
 html: ${HTMLS}
 
 %.pdf: %.xml
-	python3 prettify.py $< | xsltproc fo.xsl - | fop -q -c fop.xconf - $@
+	python3 transform.py fo.xsl $< - | fop -q -c fop.xconf - $@
 
 %.html: %.xml
-	python3 prettify.py $< | xsltproc -o $@ html.xsl -
+	python3 transform.py html.xsl $< $@
 
 .PHONY: all html clean
 
