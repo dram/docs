@@ -7,7 +7,7 @@ all: ${PDFS}
 html: ${HTMLS}
 
 %.pdf: %.xml
-	python3 transform.py fo.xsl $< - | fop -q -c fop.xconf - $@
+	python3 transform.py fo.xsl $< - | fop -c fop.xconf - $@
 
 %.html: %.xml
 	python3 transform.py html.xsl $< $@

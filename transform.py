@@ -1,6 +1,5 @@
 import lxml.etree
 
-import codecs
 import functools
 import operator
 import string
@@ -38,10 +37,6 @@ def all_text_nodes(root):
                 operator.add, map(all_text_nodes, root.childNodes))
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print("Usage: transform.py in [out]")
-        sys.exit(1)
-
     stylesheet, infile, outfile = sys.argv[1:]
 
     doc = xml.dom.minidom.parse(infile)
