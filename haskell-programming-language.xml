@@ -13,6 +13,16 @@
   </info>
 
   <chapter>
+    <title>函数</title>
+
+    <sect1>
+      <title>递归子函数</title>
+
+      <para>在Haskell中，有多种方式实现递归子函数，除了在<code>let</code>语句和<code>where</code>语句中定义外，还可以利用<code>Data.Function.fix</code>函数实现。</para>
+    </sect1>
+  </chapter>
+
+  <chapter>
     <title>惰性</title>
 
     <para>惰性是Haskell一个重要特点，在编程实践中可以加以利用，但有时也需要注意规避。</para>
