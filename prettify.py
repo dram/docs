@@ -1,9 +1,11 @@
-import sys
+import lxml.etree
+
 import codecs
-import string
-import operator
 import functools
-from xml.dom import minidom
+import operator
+import string
+import sys
+import xml.dom.minidom
 
 def add_space(text):
     def isalnum(c):
@@ -45,10 +47,10 @@ if __name__ == '__main__':
     else:
         infile, outfile = sys.argv[1], sys.argv[2]
 
-    doc = minidom.parse(infile)
+    doc = xml.dom.minidom.parse(infile)
 
     for tag in doc.getElementsByTagName("xi:include"):
-        sub = minidom.parse(tag.getAttribute("href"))
+        sub = xml.dom.minidom.parse(tag.getAttribute("href"))
         parent = tag.parentNode
         for child in sub.childNodes:
             parent.insertBefore(child, tag)
@@ -74,7 +76,11 @@ if __name__ == '__main__':
             if not nxt.data[0].isspace():
                 nxt.data = ' ' + nxt.data
 
-    if  outfile == '-':
+    rng = lxml.etree.RelaxNG(file="docbook-5.1/rng/docbook.rng")
+
+    rng.assertValid(lxml.etree.fromstring(doc.toxml()))
+
+    if outfile == '-':
         print(doc.toxml())
     else:
         codecs.open(outfile, 'w', 'utf-8').write(doc.toxml())
