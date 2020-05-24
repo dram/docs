@@ -1,4 +1,5 @@
-docbook-5.1
+docbook
+docbook-xsl
 fonts
 *.html
 *.pdf

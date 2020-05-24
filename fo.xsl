@@ -2,7 +2,7 @@
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:fo="http://www.w3.org/1999/XSL/Format">
 
-<xsl:import href="/usr/share/sgml/docbook/xsl-stylesheets/fo/docbook.xsl"/>
+<xsl:import href="docbook-xsl/fo/docbook.xsl"/>
 
 <xsl:param name="paper.type" select="'A4'"/>
 

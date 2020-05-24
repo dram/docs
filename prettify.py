@@ -76,7 +76,7 @@ if __name__ == '__main__':
             if not nxt.data[0].isspace():
                 nxt.data = ' ' + nxt.data
 
-    rng = lxml.etree.RelaxNG(file="docbook-5.1/rng/docbook.rng")
+    rng = lxml.etree.RelaxNG(file="docbook/rng/docbook.rng")
 
     rng.assertValid(lxml.etree.fromstring(doc.toxml()))
 
