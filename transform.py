@@ -16,66 +16,65 @@ def add_space(text):
     def helper(res, char):
         prev = res[-1]
 
-        if (prev
-                and not prev.isspace()
-                and not char.isspace()
-                and ((isalnum(prev) and ismulti(char))
-                    or (ismulti(prev) and isalnum(char)))):
+        if (prev and not prev.isspace() and not char.isspace()
+            and ((isalnum(prev) and ismulti(char))
+                 or (ismulti(prev) and isalnum(char)))):
             return res + ' ' + char
         else:
             return res + char
 
     return functools.reduce(helper, text)
 
-def all_text_nodes(root):
+def text_nodes(root):
     if root.nodeType == root.TEXT_NODE:
         return [root]
     elif not root.childNodes:
         return []
     else:
         return functools.reduce(
-                operator.add, map(all_text_nodes, root.childNodes))
+                operator.add, map(text_nodes, root.childNodes))
 
-if __name__ == '__main__':
-    stylesheet, infile, outfile = sys.argv[1:]
-
-    doc = xml.dom.minidom.parse(infile)
-
-    for tag in doc.getElementsByTagName("xi:include"):
-        sub = xml.dom.minidom.parse(tag.getAttribute("href"))
-        parent = tag.parentNode
-        for child in sub.childNodes:
-            parent.insertBefore(child, tag)
-        parent.removeChild(tag)
-
-    for node in all_text_nodes(doc):
-        node.data = add_space(node.data)
-
-    literals = functools.reduce(
+def literal_nodes(root):
+    return functools.reduce(
         operator.add,
-        [doc.getElementsByTagName(x)
+        [root.getElementsByTagName(x)
          for x in ['code', 'literal', 'command', 'link', 'filename',
                    'userinput', 'computeroutput']])
 
-    for item in literals:
-        prev = item.previousSibling
-        if prev and prev.nodeType == prev.TEXT_NODE:
-            if not prev.data[-1].isspace():
-                prev.data += ' '
+def inline_includes(root):
+    for node in root.getElementsByTagName("xi:include"):
+        included = xml.dom.minidom.parse(node.getAttribute("href"))
+        for child in included.childNodes:
+            node.parentNode.insertBefore(child, node)
+        node.parentNode.removeChild(node)
 
-        nxt = item.nextSibling
-        if nxt and nxt.nodeType == nxt.TEXT_NODE:
-            if not nxt.data[0].isspace():
-                nxt.data = ' ' + nxt.data
+if __name__ == '__main__':
+    stylesheet, input, output = sys.argv[1:]
 
-    xml = lxml.etree.fromstring(doc.toxml())
+    dom = xml.dom.minidom.parse(input)
 
-    lxml.etree.RelaxNG(file="docbook/rng/docbook.rng").assertValid(xml)
+    inline_includes(dom)
+
+    for node in text_nodes(dom):
+        node.data = add_space(node.data)
+
+    for node in literal_nodes(dom):
+        p, n = node.previousSibling, node.nextSibling
+
+        if p and p.nodeType == p.TEXT_NODE and not p.data[-1].isspace():
+            p.data += ' '
+
+        if n and n.nodeType == node.TEXT_NODE and not n.data[0].isspace():
+            n.data = ' ' + n.data
+
+    tree = lxml.etree.fromstring(dom.toxml())
+
+    lxml.etree.RelaxNG(file="docbook/rng/docbook.rng").assertValid(tree)
 
     result = lxml.etree.tounicode(
-        lxml.etree.XSLT(lxml.etree.parse(stylesheet))(xml))
+        lxml.etree.XSLT(lxml.etree.parse(stylesheet))(tree))
 
-    if outfile == '-':
+    if output == '-':
         sys.stdout.write(result)
     else:
-        open(outfile, 'w').write(result)
+        open(output, 'w').write(result)
