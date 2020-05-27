@@ -27,19 +27,29 @@
 
     <para>惰性是Haskell一个重要特点，在编程实践中可以加以利用，但有时也需要注意规避。</para>
 
-    <para>例如以下代码，因为惰性的存在，导致与预期不一致：</para>
+    <sect1>
+      <title>迭代器</title>
 
-    <programlisting>main = do
-  contents &lt;- readFile "foo.txt"
-  writeFile "foo.txt" ("# " ++ contents)</programlisting>
+      <para>其他语言中的迭代器也具有惰性的特点，例如Rust中的<code>io::BufRead::lines</code>返回迭代器按行读取文件内容，对应到Haskell中则是<code>Data.Text.Lazy.lines . Data.Text.Lazy.IO.readFile</code>。</para>
+    </sect1>
 
-    <para><command>runghc foo.hs</command>会提示以下错误：</para>
+    <sect1>
+      <title>陷阱</title>
 
-    <screen>foo.hs: foo.txt: openFile: resource busy (file is locked)</screen>
+      <para>例如以下代码，因为惰性的存在，导致与预期不一致：</para>
 
-    <para>原因是因为惰性计算，在执行<code>writeFile</code>时，<code>readFile</code>还没有结束，导致文件还处于打开状态。在<link xlink:href="https://wiki.haskell.org/Maintaining_laziness#Input_and_Output"/>有详细的讨论。</para>
+      <programlisting>main = do
+      contents &lt;- readFile "foo.txt"
+      writeFile "foo.txt" ("# " ++ contents)</programlisting>
 
-    <para>至于以上问题的一个解决方案，是利用<code>Data.Text.IO</code>中的<code>readFile</code>接口替代。</para>
+      <para><command>runghc foo.hs</command>会提示以下错误：</para>
+
+      <screen>foo.hs: foo.txt: openFile: resource busy (file is locked)</screen>
+
+      <para>原因是因为惰性计算，在执行<code>writeFile</code>时，<code>readFile</code>还没有结束，导致文件还处于打开状态。在<link xlink:href="https://wiki.haskell.org/Maintaining_laziness#Input_and_Output"/>有详细的讨论。</para>
+
+      <para>至于以上问题的一个解决方案，是利用<code>Data.Text.IO</code>中的<code>readFile</code>接口替代。</para>
+    </sect1>
   </chapter>
 
   <chapter>
