@@ -1,10 +1,16 @@
-PDFS := linux-desktop.pdf
+XMLS=\
+	haskell-programming-environment.xml \
+	haskell-programming-language.xml \
+	linux-application-development.xml \
+	linux-desktop.xml
 
-HTMLS := linux-desktop.html
+.PHONY: all clean html pdf
 
-all: ${PDFS}
+all: html pdf
 
-html: ${HTMLS}
+html: $(XMLS:xml=html)
+
+pdf: $(XMLS:xml=pdf)
 
 %.pdf: %.xml
 	python3 transform.py fo.xsl $< - | fop -c fop.xconf - $@
@@ -12,7 +18,5 @@ html: ${HTMLS}
 %.html: %.xml
 	python3 transform.py html.xsl $< $@
 
-.PHONY: all html clean
-
 clean:
-	rm -f ${PDFS} ${HTMLS}
+	rm -f $(XMLS:xml=html) $(XMLS:xml=pdf)
